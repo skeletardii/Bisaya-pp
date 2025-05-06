@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,5 +21,20 @@ namespace Bisaya__.src.Core
 {
     internal class Parser
     {
+        private List<Token> _tokens;
+        private int _pos;
+
+        public Parser(List<Token> tokens)
+        {
+            _tokens = tokens;
+            _pos = 0;
+        }
+
+        // Example: parsing method
+        public ASTNode ParseExpression()
+        {
+            // implementation here...
+            return null;
+        }
     }
 }
