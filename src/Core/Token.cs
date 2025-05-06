@@ -14,5 +14,48 @@ namespace Bisaya__.src.Core
 {
     internal class Token
     {
+        public TokenType Type { get; }
+        public string? Value { get; }
+
+        public Token(TokenType type, string value)
+        {
+            if (!Enum.IsDefined(typeof(TokenType), type))
+                throw new ArgumentException($"Invalid token type: {type}");
+            Type = type;
+            Value = value;
+        }
+        public Token(TokenType type)
+        {
+            if (!Enum.IsDefined(typeof(TokenType), type))
+                throw new ArgumentException($"Invalid token type: {type}");
+            Type = type;
+        }
+    }
+    public enum TokenType
+    {
+        Keyword,
+        DataType,
+        Identifier, // variable names
+
+        // Literals (values)
+        NumberLiteral,
+        StringLiteral,
+        CharLiteral,
+        BooleanLiteral,
+
+        // Operators 
+        ArithmeticOperator,
+        LogicalOperator,
+        RelationalOperator,
+        AssignmentOperator,
+        Concatenator,
+
+        // Delimiters
+        LeftParen,
+        RightParen,
+        LeftBrace,
+        RightBrace,
+        Comma,
+        Colon
     }
 }
