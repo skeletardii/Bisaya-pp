@@ -22,12 +22,28 @@ namespace Bisaya__.src.Core
     internal class Parser
     {
         private List<Token> _tokens;
-        private int _pos;
+        private int pos;
 
         public Parser(List<Token> tokens)
         {
             _tokens = tokens;
-            _pos = 0;
+            pos = 0;
+        }
+
+        private Token curr => pos < _tokens.Count ? _tokens[pos] : null;
+
+        private Token Advance()
+        {
+            if (pos < _tokens.Count)
+            {
+                return _tokens[pos++];
+            }
+            return null;
+        }
+
+        private bool Check(Tokentype type)
+        {
+
         }
 
         // Example: parsing method

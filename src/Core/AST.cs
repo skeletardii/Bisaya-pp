@@ -16,49 +16,109 @@ The AST simplifies execution and optimization.
 
 namespace Bisaya__.src.Core
 {
-    // Base AST node
     internal abstract class ASTNode
     {
         public ASTNode? Parent { get; set; }
     }
 
-    // 1. Number literal
-    internal class NumberNode : ASTNode
+    // Base for number nodes
+    internal abstract class NumberNode : ASTNode
     {
-        public Token Token { get; }
+        public int Value { get; }
 
-        public NumberNode(Token token)
+        protected NumberNode(Token token)
+        {
+            if (token.Value == null)
+                throw new ArgumentException("Token must have a value.");
+            Value = (int.Parse(token.Value));
+        }
+    }
+
+    internal class IntegerNode : NumberNode
+    {
+        public IntegerNode(Token token) : base(token)
+        {
+            if (token.Type != TokenType.NumberLiteral)
+                throw new ArgumentException("Expected an NumberLiteral token.");
+        }
+    }
+
+    internal class FloatNode : NumberNode
+    {
+        public FloatNode(Token token) : base(token)
         {
             if (token.Type != TokenType.NumberLiteral)
                 throw new ArgumentException("Expected a NumberLiteral token.");
-            Token = token;
         }
     }
 
-    // 2. Variable reference
+    internal class CharNode : ASTNode
+    {
+        public char Value { get; } 
+  
+        public CharNode(Token token)
+        {
+            if (token.Type != TokenType.CharLiteral || token.Value == null)
+                throw new ArgumentException("Expected a CharLiteral token.");
+            Value = token.Value[0];
+        }
+    }
+
+    internal class BoolNode : ASTNode
+    {
+        public bool Value { get; }
+
+        public BoolNode(Token token)
+        {
+            if (token.Type != TokenType.CharLiteral || token.Value == null)
+                throw new ArgumentException("Expected a CharLiteral token.");
+            if (token.Value == "oo")
+                Value = true;
+            Value = false;
+        } 
+    }
+
+    internal class StringNode : ASTNode
+    {
+        public string Value { get; }
+
+        public StringNode(Token token)
+        {
+            if (token.Type != TokenType.StringLiteral || token.Value == null)
+                throw new ArgumentException("Expected a CharLiteral token.");
+            Value = token.Value;
+        }
+    }
+
+    // Variable
     internal class VariableNode : ASTNode
     {
-        public Token Token { get; }
+        public string Type { get; }
+        public string Name { get; }
 
         public VariableNode(Token token)
         {
-            if (token.Type != TokenType.Identifier)
-                throw new ArgumentException("Expected an Identifier token.");
-            Token = token;
+            if (token.Type != TokenType.Identifier || token.Value == null)
+                throw new ArgumentException("Expected an Identifier token with a value.");
+            Name = token.Value;
+            Type = token.Type.ToString();
         }
     }
 
-    // 3. Binary operation
+    // Binary operation
     internal class BinaryOpNode : ASTNode
     {
         public ASTNode Left { get; }
-        public Token OperatorToken { get; }
+        public string Operator { get; }
         public ASTNode Right { get; }
 
-        public BinaryOpNode(ASTNode left, Token op, ASTNode right)
+        public BinaryOpNode(ASTNode left, Token opToken, ASTNode right)
         {
+            if (opToken.Value == null)
+                throw new ArgumentException("Operator token must have a value.");
+
             Left = left;
-            OperatorToken = op;
+            Operator = opToken.Value;
             Right = right;
 
             Left.Parent = this;
@@ -66,23 +126,24 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // 4. Assignment
+    // Assignment
     internal class AssignmentNode : ASTNode
     {
-        public Token Identifier { get; }
+        public string VariableName { get; }
         public ASTNode Value { get; }
 
-        public AssignmentNode(Token identifier, ASTNode value)
+        public AssignmentNode(Token identifierToken, ASTNode value)
         {
-            if (identifier.Type != TokenType.Identifier)
-                throw new ArgumentException("Expected an Identifier token.");
-            Identifier = identifier;
+            if (identifierToken.Type != TokenType.Identifier || identifierToken.Value == null)
+                throw new ArgumentException("Expected an Identifier token with a value.");
+            VariableName = identifierToken.Value;
             Value = value;
+
             Value.Parent = this;
         }
     }
 
-    // 5. Block (sequence of statements)
+    // Block (list of statements)
     internal class BlockNode : ASTNode
     {
         public List<ASTNode> Statements { get; }
@@ -95,7 +156,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // 6. If statement
+    // If statement
     internal class IfNode : ASTNode
     {
         public ASTNode Condition { get; }
@@ -115,7 +176,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // 7. While loop
+    // While loop
     internal class WhileNode : ASTNode
     {
         public ASTNode Condition { get; }
@@ -131,17 +192,17 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // 8. Function call
+    // Function call
     internal class FunctionCallNode : ASTNode
     {
-        public Token NameToken { get; }
+        public string FunctionName { get; }
         public List<ASTNode> Arguments { get; }
 
         public FunctionCallNode(Token nameToken, List<ASTNode> arguments)
         {
-            if (nameToken.Type != TokenType.Identifier)
-                throw new ArgumentException("Expected an Identifier token for function name.");
-            NameToken = nameToken;
+            if (nameToken.Type != TokenType.Identifier || nameToken.Value == null)
+                throw new ArgumentException("Expected an Identifier token with a value.");
+            FunctionName = nameToken.Value;
             Arguments = arguments;
 
             foreach (var arg in arguments)
@@ -149,21 +210,28 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // 9. Function definition
+    // Function definition
     internal class FunctionDefNode : ASTNode
     {
-        public Token NameToken { get; }
-        public List<Token> Parameters { get; }
+        public string Name { get; }
+        public List<string> Parameters { get; }
         public ASTNode Body { get; }
 
-        public FunctionDefNode(Token nameToken, List<Token> parameters, ASTNode body)
+        public FunctionDefNode(Token nameToken, List<Token> parameterTokens, ASTNode body)
         {
-            if (nameToken.Type != TokenType.Identifier)
-                throw new ArgumentException("Expected an Identifier token for function name.");
-            NameToken = nameToken;
-            Parameters = parameters;
-            Body = body;
+            if (nameToken.Type != TokenType.Identifier || nameToken.Value == null)
+                throw new ArgumentException("Expected an Identifier token with a value.");
+            Name = nameToken.Value;
 
+            Parameters = new List<string>();
+            foreach (var param in parameterTokens)
+            {
+                if (param.Type != TokenType.Identifier || param.Value == null)
+                    throw new ArgumentException("Function parameter must be an Identifier token with a value.");
+                Parameters.Add(param.Value);
+            }
+
+            Body = body;
             Body.Parent = this;
         }
     }
