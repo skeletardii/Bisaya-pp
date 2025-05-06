@@ -16,11 +16,16 @@ The AST simplifies execution and optimization.
 
 namespace Bisaya__.src.Core
 {
+    // Base class for all AST nodes
     internal abstract class ASTNode
     {
         public ASTNode? Parent { get; set; }
     }
-    internal abstract class LiteralNodeBase : ASTNode {}
+
+    // Base for all literal-related nodes
+    internal abstract class LiteralNodeBase : ASTNode { }
+
+    // Generic base class for literal nodes that hold a typed value
     internal abstract class LiteralNode<T> : LiteralNodeBase
     {
         public abstract T Value { get; set; }
@@ -31,18 +36,19 @@ namespace Bisaya__.src.Core
         }
         protected LiteralNode(T val)
         {
-            if (val == null ) throw new ArgumentNullException("Argument is null.");
-            Value = (T)val;
+            if (val == null) throw new ArgumentNullException("Argument is null.");
+            Value = val;
         }
     }
-    // Base for number nodes
+
+    // Numeric node base
     internal abstract class NumberNode<T> : LiteralNode<T>
     {
         public abstract override T Value { get; set; }
         protected NumberNode(Token token) : base(token)
         {
             if (token.Type != TokenType.NumberLiteral)
-                throw new ArgumentException("Expected an NumberLiteral token.");
+                throw new ArgumentException("Expected a NumberLiteral token.");
         }
         public NumberNode(T val) : base(val) { Value = val; }
     }
@@ -51,7 +57,7 @@ namespace Bisaya__.src.Core
     {
         public override int Value { get; set; }
         public IntegerNode(Token token) : base(token) { Value = int.Parse(token.Value); }
-        public IntegerNode(int val) : base(val) { Value = val;  }
+        public IntegerNode(int val) : base(val) { Value = val; }
     }
 
     internal class FloatNode : NumberNode<float>
@@ -63,8 +69,8 @@ namespace Bisaya__.src.Core
 
     internal class CharNode : LiteralNode<char>
     {
-        public override char Value { get; set;  } 
-        public CharNode(Token token) : base (token)
+        public override char Value { get; set; }
+        public CharNode(Token token) : base(token)
         {
             if (token.Type != TokenType.CharLiteral || token.Value == null)
                 throw new ArgumentException("Expected a CharLiteral token with value.");
@@ -75,16 +81,14 @@ namespace Bisaya__.src.Core
 
     internal class BoolNode : LiteralNode<bool>
     {
-        public override bool Value { get; set;  }
-        public BoolNode(Token token) : base (token)
+        public override bool Value { get; set; }
+        public BoolNode(Token token) : base(token)
         {
             if (token.Type != TokenType.BooleanLiteral || token.Value == null)
                 throw new ArgumentException("Expected a BooleanLiteral token with value.");
-            if (token.Value == "oo")
-                Value = true;
-            Value = false;
-        } 
-        public BoolNode(bool value) : base (value) { Value = value; }
+            Value = token.Value.ToUpper() == "OO";
+        }
+        public BoolNode(bool value) : base(value) { Value = value; }
     }
 
     internal class StringNode : LiteralNode<string>
@@ -92,14 +96,14 @@ namespace Bisaya__.src.Core
         public override string Value { get; set; }
         public StringNode(Token token) : base(token)
         {
-            if (token.Type != TokenType.StringLiteral || token.Value == null)
-                throw new ArgumentException("Expected a StringLiteral token with a value.");
+            if (token.Value == null)
+                throw new ArgumentException("Expected a token with a value.");
             Value = token.Value;
         }
         public StringNode(string value) : base(value) { Value = value; }
     }
 
-    // Binary operation
+    // Node representing binary operations (e.g., +, -, *, /)
     internal class BinaryOpNode : LiteralNodeBase
     {
         public LiteralNodeBase Left { get; }
@@ -120,24 +124,23 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Assignment
+    // Node representing variable assignments
     internal class AssignmentNode : LiteralNodeBase
     {
         public string VariableName { get; }
         public LiteralNodeBase Value { get; set; }
 
-
         public AssignmentNode(string name, LiteralNodeBase value)
         {
-            if (value==null)
-                throw new ArgumentException("Expected an token with a valid value.");
+            if (value == null)
+                throw new ArgumentException("Expected a token with a valid value.");
             Value = value;
             VariableName = name;
             Value.Parent = this;
         }
     }
 
-    // Block (list of statements)
+    // Represents a block of multiple statements
     internal class BlockNode : ASTNode
     {
         public List<ASTNode> Statements { get; }
@@ -150,7 +153,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // If statement
+    // Node for KUNG conditions (if-else logic)
     internal class IfNode : ASTNode
     {
         public LiteralNodeBase Condition { get; }
@@ -170,7 +173,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // While loop
+    // Node representing a loop (ALANG SA)
     internal class WhileNode : ASTNode
     {
         public LiteralNodeBase Condition { get; }
@@ -186,7 +189,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Function call
+    // Represents built-in function calls like IPAKITA, DAWAT
     internal class FunctionCallNode : ASTNode
     {
         public string FunctionName { get; }
@@ -195,7 +198,7 @@ namespace Bisaya__.src.Core
         public FunctionCallNode(Token nameToken, List<ASTNode> arguments)
         {
             if (nameToken.Type != TokenType.Keyword || nameToken.Value == null)
-                throw new ArgumentException("Expected an Identifier token with a value.");
+                throw new ArgumentException("Expected a Keyword token with a value.");
             FunctionName = nameToken.Value;
             Arguments = arguments;
 
@@ -204,7 +207,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Function definition
+    // Function definitions (not yet used)
     internal class FunctionDefNode : ASTNode
     {
         public string Name { get; }
