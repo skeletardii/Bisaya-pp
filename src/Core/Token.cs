@@ -49,6 +49,7 @@ namespace Bisaya__.src.Core
         RelationalOperator,
         AssignmentOperator,
         Concatenator,
+        CarriageReturn,
 
         // Delimiters
         LeftParen,
