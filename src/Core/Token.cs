@@ -54,6 +54,8 @@ namespace Bisaya__.src.Core
         RightParen,
         LeftBrace,
         RightBrace,
+        LeftCurly,
+        RightCurly,
         Comma,
         Colon
     }
