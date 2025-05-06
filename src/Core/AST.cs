@@ -90,21 +90,6 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Variable
-    internal class VariableNode : ASTNode
-    {
-        public string Type { get; }
-        public string Name { get; }
-
-        public VariableNode(Token token)
-        {
-            if (token.Type != TokenType.Identifier || token.Value == null)
-                throw new ArgumentException("Expected an Identifier token with a value.");
-            Name = token.Value;
-            Type = token.Type.ToString();
-        }
-    }
-
     // Binary operation
     internal class BinaryOpNode : ASTNode
     {
@@ -132,12 +117,13 @@ namespace Bisaya__.src.Core
         public string VariableName { get; }
         public ASTNode Value { get; }
 
-        public AssignmentNode(Token identifierToken, ASTNode value)
+
+        public AssignmentNode(string name, ASTNode value)
         {
-            if (identifierToken.Type != TokenType.Identifier || identifierToken.Value == null)
-                throw new ArgumentException("Expected an Identifier token with a value.");
-            VariableName = identifierToken.Value;
+            if (value==null)
+                throw new ArgumentException("Expected an token with a valid value.");
             Value = value;
+            VariableName = name;
 
             Value.Parent = this;
         }
@@ -200,7 +186,7 @@ namespace Bisaya__.src.Core
 
         public FunctionCallNode(Token nameToken, List<ASTNode> arguments)
         {
-            if (nameToken.Type != TokenType.Identifier || nameToken.Value == null)
+            if (nameToken.Type != TokenType.Keyword || nameToken.Value == null)
                 throw new ArgumentException("Expected an Identifier token with a value.");
             FunctionName = nameToken.Value;
             Arguments = arguments;
