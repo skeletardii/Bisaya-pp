@@ -19,5 +19,33 @@ namespace Bisaya__.src.Core
 {
     internal class Environment
     {
+
+        private static Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
+        public static dynamic? Get(string varName)
+        {
+            if (variables.ContainsKey(varName))
+            {
+                return variables[varName];
+            }
+            return null;
+        }
+        public static bool Set(string varName, dynamic value)
+        {
+            if (!variables.ContainsKey(varName))
+            {
+                variables.Add(varName, value);
+                return true;
+            }
+            if (variables[varName].getType() == value.getType())
+            {
+                variables[varName]=value;
+                return true;
+            }
+            return false;
+        }
+        public static bool Free(string varName)
+        {
+            return variables.Remove(varName);
+        }
     }
 }

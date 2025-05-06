@@ -12,10 +12,10 @@ Tokens make parsing easier by structuring the input into logical parts.
  */
 namespace Bisaya__.src.Core
 {
-    internal class Token
+    public class Token
     {
-        public TokenType Type { get; }
-        public string? Value { get; }
+        public TokenType Type { get; set; }
+        public string? Value { get; set; }
 
         public Token(TokenType type, string value)
         {
