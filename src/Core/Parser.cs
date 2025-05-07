@@ -5,31 +5,55 @@ namespace Bisaya__.src.Core
 {
     internal class Parser
     {
-        private readonly List<Token> _tokens;
-        private int _position;
+        private readonly List<List<Token>> _tokens;
+        private int _xpos, _ypos;
 
-        public Parser(List<Token> tokens)
+        public Parser(List<List<Token>> tokens)
         {
             _tokens = tokens;
-            _position = 0;
+            _xpos = 0;
+            _ypos = 0;
         }
 
         private Token Peek(int offset = 0)
         {
-            int index = _position + offset;
-            return index < _tokens.Count ? _tokens[index] : _tokens[^1];
+            int line = _ypos;
+            int col = _xpos;
+            while (offset > 0)
+            {
+                col++;
+                if (line >= _tokens.Count) break;
+                if (col >= _tokens[line].Count)
+                {
+                    line++;
+                    col = 0;
+                }
+                offset--;
+            }
+
+            if (line >= _tokens.Count || col >= _tokens[line].Count)
+                return _tokens[^1][^1];
+
+            return _tokens[line][col];
         }
 
         private Token Next()
         {
-            return _tokens[_position++];
+            var current = _tokens[_ypos][_xpos];
+            _xpos++;
+            if (_xpos >= _tokens[_ypos].Count)
+            {
+                _ypos++;
+                _xpos = 0;
+            }
+            return current;
         }
 
         private bool Match(TokenType type)
         {
             if (Peek().Type == type)
             {
-                _position++;
+                Next();
                 return true;
             }
             return false;
@@ -42,6 +66,11 @@ namespace Bisaya__.src.Core
             return Next();
         }
 
+        private bool HasMoreTokens()
+        {
+            return _ypos < _tokens.Count && (_xpos < _tokens[_ypos].Count || _ypos + 1 < _tokens.Count);
+        }
+
         public ASTNode Parse()
         {
             return ParseBlock();
@@ -50,7 +79,7 @@ namespace Bisaya__.src.Core
         private BlockNode ParseBlock()
         {
             var statements = new List<ASTNode>();
-            while (_position < _tokens.Count)
+            while (HasMoreTokens())
             {
                 statements.Add(ParseStatement());
             }
@@ -70,7 +99,7 @@ namespace Bisaya__.src.Core
             if (current.Type == TokenType.Identifier && Peek(1).Type == TokenType.AssignmentOperator)
                 return ParseAssignment();
 
-            return ParseExpression(); // fallback to expressions
+            return ParseExpression();
         }
 
         private AssignmentNode ParseAssignment()
@@ -134,7 +163,6 @@ namespace Bisaya__.src.Core
         {
             Next(); // consume 'KUNG'
             var condition = (LiteralNodeBase)ParseExpression();
-
             var thenBranch = ParseBlock();
 
             BlockNode? elseBranch = null;
@@ -157,7 +185,7 @@ namespace Bisaya__.src.Core
 
         private FunctionCallNode ParseFunctionCall(Token? overrideToken = null)
         {
-            var nameToken = overrideToken ?? Next(); // consume function name
+            var nameToken = overrideToken ?? Next();
             Expect(TokenType.LeftParen, "Expected '(' after function name.");
 
             var args = new List<ASTNode>();

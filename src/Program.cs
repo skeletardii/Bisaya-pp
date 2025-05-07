@@ -27,7 +27,7 @@ class Program
         try
         {
             Parser parser = new Parser(tokens);
-            BlockNode ast = parser.ParseProgram();
+            BlockNode ast = (BlockNode)parser.Parse();
 
             Console.WriteLine("✅ Parsing successful!");
             Console.WriteLine($"Root node type: {ast.GetType().Name}");
