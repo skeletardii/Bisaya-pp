@@ -21,36 +21,101 @@ namespace Bisaya__.src.Core
 {
     internal class Parser
     {
-        private List<Token> _tokens;
-        private int pos;
+        private readonly List<Token> tokens;
+        private int position = 0;
 
         public Parser(List<Token> tokens)
         {
-            _tokens = tokens;
-            pos = 0;
+            this.tokens = tokens;
         }
 
-        private Token curr => pos < _tokens.Count ? _tokens[pos] : null;
-
-        private Token Advance()
+        private Token Current => position < tokens.Count ? tokens[position] : tokens[^1];
+        private Token Advance() => position < tokens.Count ? tokens[position++] : tokens[^1];
+        private bool Check(TokenType type)
         {
-            if (pos < _tokens.Count)
+            if (Current.Type == type)
             {
-                return _tokens[pos++];
+                Advance();
+                return true;
             }
-            return null;
+            return false;
         }
 
-        private bool Check(Tokentype type)
+        private Token Expect(TokenType type)
         {
-
+            if (Current.Type != type)
+                throw new Exception($"Expected {type}, found {Current.Type}");
+            return Advance();
         }
 
-        // Example: parsing method
-        public ASTNode ParseExpression()
+        public ASTNode Parse()
         {
-            // implementation here...
-            return null;
+            return ParseStatement();
+        }
+
+        private ASTNode ParseStatement()
+        {
+            if (Check(TokenType.Keyword) && Current.Value == "kung") 
+                return ParseIf();
+
+            return ParseAssignment(); 
+        }
+
+        private ASTNode ParseAssignment()
+        {
+            var identifier = Expect(TokenType.Identifier);
+            Expect(TokenType.AssignmentOperator);
+            var expr = ParseExpression();
+            return new AssignmentNode(identifier.Value!, expr);
+        }
+
+        private ASTNode ParseExpression()
+        {
+            var left = ParsePrimary();
+            while (IsBinaryOperator(Current.Type))
+            {
+                var op = Advance();
+                var right = ParsePrimary();
+                left = new BinaryOpNode(left, op, right);
+            }
+            return left;
+        }
+
+        private ASTNode ParsePrimary()
+        {
+            var token = Advance();
+            return token.Type switch
+            {
+                TokenType.NumberLiteral => new IntegerNode(token),
+                TokenType.StringLiteral => new StringNode(token),
+                TokenType.CharLiteral => new CharNode(token),
+                TokenType.BooleanLiteral => new BoolNode(token),
+                TokenType.Identifier => new VariableNode(token),
+                _ => throw new Exception($"Unexpected token: {token.Type}")
+            };
+        }
+
+        private ASTNode ParseIf()
+        {
+            Expect(TokenType.LeftParen);
+            var condition = ParseExpression();
+            Expect(TokenType.RightParen);
+
+            var thenBranch = ParseStatement();
+            ASTNode? elseBranch = null;
+
+            if (Match(TokenType.Keyword) && Current.Value == "kungdili")
+                elseBranch = ParseStatement();
+
+            return new IfNode(condition, thenBranch, elseBranch);
+        }
+
+        private bool IsBinaryOperator(TokenType type)
+        {
+            return type is TokenType.ArithmeticOperator
+                        or TokenType.RelationalOperator
+                        or TokenType.LogicalOperator
+                        or TokenType.Concatenator;
         }
     }
 }

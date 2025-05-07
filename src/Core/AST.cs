@@ -22,30 +22,32 @@ namespace Bisaya__.src.Core
     }
 
     // Base for number nodes
-    internal abstract class NumberNode : ASTNode
+    internal abstract class NumberNode<T> : ASTNode
     {
-        public int Value { get; }
+        public abstract T Value { get; }
 
         protected NumberNode(Token token)
         {
             if (token.Value == null)
                 throw new ArgumentException("Token must have a value.");
-            Value = (int.Parse(token.Value));
+            //Value = (int.Parse(token.Value));
         }
     }
 
-    internal class IntegerNode : NumberNode
+    internal class IntegerNode : NumberNode<int>
     {
-        public IntegerNode(Token token) : base(token)
+        public override int Value { get; }
+        public IntegerNode(Token token) : base (token)
         {
             if (token.Type != TokenType.NumberLiteral)
                 throw new ArgumentException("Expected an NumberLiteral token.");
         }
     }
 
-    internal class FloatNode : NumberNode
+    internal class FloatNode : NumberNode<float>
     {
-        public FloatNode(Token token) : base(token)
+        public override float Value { get; }
+        public FloatNode(Token token) : base (token)
         {
             if (token.Type != TokenType.NumberLiteral)
                 throw new ArgumentException("Expected a NumberLiteral token.");
