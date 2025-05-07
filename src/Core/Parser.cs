@@ -63,7 +63,7 @@ namespace Bisaya__.src.Core
 
             if (current.Type == TokenType.Keyword && current.Value == "KUNG")
                 return ParseIf();
-            if (current.Type == TokenType.Keyword && current.Value == "ALANG")
+            if (current.Type == TokenType.Keyword && current.Value == "ALANG SA")
                 return ParseWhile();
             if (current.Type == TokenType.Keyword && (current.Value == "IPAKITA" || current.Value == "DAWAT"))
                 return ParseFunctionCall();
@@ -138,9 +138,9 @@ namespace Bisaya__.src.Core
             var thenBranch = ParseBlock();
 
             BlockNode? elseBranch = null;
-            if (Peek().Type == TokenType.Keyword && Peek().Value == "KUNG_DILI")
+            if (Peek().Type == TokenType.Keyword && Peek().Value == "KUNG-DILI")
             {
-                Next(); // consume 'KUNG_DILI'
+                Next(); // consume 'KUNG-DILI'
                 elseBranch = ParseBlock();
             }
 
@@ -149,7 +149,7 @@ namespace Bisaya__.src.Core
 
         private WhileNode ParseWhile()
         {
-            Next(); // consume 'ALANG'
+            Next(); // consume 'ALANG SA'
             var condition = (LiteralNodeBase)ParseExpression();
             var body = ParseBlock();
             return new WhileNode(condition, body);
