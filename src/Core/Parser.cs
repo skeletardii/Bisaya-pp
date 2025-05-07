@@ -71,7 +71,7 @@ namespace Bisaya__.src.Core
             return _ypos < _tokens.Count && (_xpos < _tokens[_ypos].Count || _ypos + 1 < _tokens.Count);
         }
 
-        public ASTNode Parse()
+        public BlockNode Parse()
         {
             return ParseBlock();
         }
