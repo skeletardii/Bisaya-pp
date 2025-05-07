@@ -1,0 +1,82 @@
+1:Error
+SUGOD
+
+2:Error
+SUGOD
+	--This will work!	
+	MUGNA TINUOD NUMERO="OO"
+KATAPUSAN
+
+3:Error
+SUGOD
+	MUGNA NUMERO 1x
+KATAPUSANSUGOD
+	MUGNA NUMERO 1x
+KATAPUSAN
+
+4:OK
+SUGOD
+	MUGNA sum=0
+	sum = sum + 5
+	MUGNA TIPIK ave = 0.00
+KATAPUSAN
+--This is ok
+
+5:OK
+SUGOD
+	MUGNA NUMERO x = 5, z
+	MUGNA TINUOD numero="OO"
+	x=z=6
+	numero = "DILI"
+KATAPUSAN
+
+6:ERROR
+SUGOD
+	MUGNA NUMERO x, z
+	MUGNA TINUOD NUMERO="OO"
+KATAPUSAN
+
+7:OK
+SUGOD
+	MUGNA NUMERO x = -5, y
+	DAWAT: y
+	IPAKITA: x + y
+KATAPUSAN
+8:OK
+SUGOD
+	MUGNA NUMERO x = 5, b = 2, z
+	x = x + b
+	DAWAT: z
+	IPAKITA: [-] & [-] & x & [&] & b & z & [-] & [-]
+KATAPUSAN
+9:OK
+SUGOD
+	MUGNA LETRA l = 'a'
+	MUGNA LETRA m = 'b'
+	MUGNA LETRA n, o;
+	DAWAT: n
+	o = n;
+	IPAKITA: l & m & n & o
+KATAPUSAN
+
+10:ERROR
+SUGOD
+	MUGNA LETRA a = 'a', b = 'b'
+	MUGNA LETRA c = 'c'
+	IPAKITA: a b c
+KATAPUSAN
+
+11:
+SUGOD
+	MUGNA NUMERO X, y
+	DAWAT: X
+	DAWAT: y
+	IPAKITA: X + y
+KATAPUSAN
+
+12:
+SUGOD
+	MUGNA TINUOD a
+	DAWAT: a
+	IPAKITA: DILI a
+KATAPUSAN

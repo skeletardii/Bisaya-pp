@@ -1,279 +1,204 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-/*
-The Parser takes tokens from the lexer and builds a tree-like structure called the Abstract Syntax Tree (AST).
-The parser follows the language’s grammar rules:
-    It checks if the syntax is correct.
-    It handles precedence (e.g., multiplication before addition).
-    It structures expressions and statements logically.
-Example: For 5 + 10, the parser produces an AST:
 
-    (+)
-   /   \
- (5)   (10)
-
-Note: The lexer outputs a List<List<Token>>, with each inner list representing tokens from a single line of code.
- */
 namespace Bisaya__.src.Core
 {
     internal class Parser
     {
-        private List<List<Token>> _tokenLines;
-        private int lineIndex = 0;
-        private int tokenIndex = 0;
+        private readonly List<List<Token>> _tokens;
+        private int _xpos, _ypos;
 
-        public Parser(List<List<Token>> tokenLines)
+        public Parser(List<List<Token>> tokens)
         {
-            _tokenLines = tokenLines;
+            _tokens = tokens;
+            _xpos = 0;
+            _ypos = 0;
         }
 
-        // Get the current token in the current line
-        private Token curr => lineIndex < _tokenLines.Count && tokenIndex < _tokenLines[lineIndex].Count ? _tokenLines[lineIndex][tokenIndex] : null;
-
-        // Move to the next token in the current line, or the first token of the next line
-        private Token Advance()
+        private Token Peek(int offset = 0)
         {
-            if (lineIndex >= _tokenLines.Count) return null;
-            tokenIndex++;
-            if (tokenIndex >= _tokenLines[lineIndex].Count)
+            int line = _ypos;
+            int col = _xpos;
+            while (offset > 0)
             {
-                lineIndex++;
-                tokenIndex = 0;
+                col++;
+                if (line >= _tokens.Count) break;
+                if (col >= _tokens[line].Count)
+                {
+                    line++;
+                    col = 0;
+                }
+                offset--;
             }
-            return curr;
+
+            if (line >= _tokens.Count || col >= _tokens[line].Count)
+                return _tokens[^1][^1];
+
+            return _tokens[line][col];
         }
 
-        // Check if the current token matches a specific type without consuming it
-        private bool Check(TokenType type)
+        private Token Next()
         {
-            return curr != null && curr.Type == type;
+            var current = _tokens[_ypos][_xpos];
+            _xpos++;
+            if (_xpos >= _tokens[_ypos].Count)
+            {
+                _ypos++;
+                _xpos = 0;
+            }
+            return current;
         }
 
-        // Check and advance if the current token matches the type
         private bool Match(TokenType type)
         {
-            if (Check(type))
+            if (Peek().Type == type)
             {
-                Advance();
+                Next();
                 return true;
             }
             return false;
         }
 
-        // Ensure the next token is of the expected type, or throw an error
-        private Token Consume(TokenType type, string errorMessage)
+        private Token Expect(TokenType type, string errorMessage)
         {
-            if (Check(type)) return Advance();
-            throw new Exception($"Parse error at line {curr?.LineNumber}, column {curr?.ColumnNumber}: {errorMessage}");
+            if (Peek().Type != type)
+                throw new Exception(errorMessage);
+            return Next();
         }
 
-        // Parse the entire program by walking through each line's tokens
-        public BlockNode ParseProgram()
+        private bool HasMoreTokens()
+        {
+            return _ypos < _tokens.Count && (_xpos < _tokens[_ypos].Count || _ypos + 1 < _tokens.Count);
+        }
+
+        public BlockNode Parse()
+        {
+            return ParseBlock();
+        }
+
+        private BlockNode ParseBlock()
         {
             var statements = new List<ASTNode>();
-
-            // Skip any structural delimiters like SUGOD/KATAPUSAN
-            while (lineIndex < _tokenLines.Count &&
-                   _tokenLines[lineIndex].Count == 1 &&
-                   (_tokenLines[lineIndex][0].Value.ToUpper() == "SUGOD" ||
-                    _tokenLines[lineIndex][0].Value.ToUpper() == "KATAPUSAN"))
+            while (HasMoreTokens())
             {
-                lineIndex++;
-            }
-
-            while (lineIndex < _tokenLines.Count)
-            {
-                if (_tokenLines[lineIndex].Count == 0)
-                {
-                    lineIndex++;
-                    continue;
-                }
-                tokenIndex = 0;
-
-                // Skip empty or structural lines again
-                if (_tokenLines[lineIndex].Count == 1 &&
-                    (_tokenLines[lineIndex][0].Value.ToUpper() == "SUGOD" ||
-                     _tokenLines[lineIndex][0].Value.ToUpper() == "KATAPUSAN"))
-                {
-                    lineIndex++;
-                    continue;
-                }
-
                 statements.Add(ParseStatement());
-                lineIndex++;
             }
             return new BlockNode(statements);
         }
 
-        // Parse a single statement based on its starting keyword or identifier
         private ASTNode ParseStatement()
         {
-            if (Check(TokenType.Keyword))
-            {
-                string keyword = curr.Value.ToUpper();
-                if (keyword == "MUGNA") return ParseDeclaration();
-                if (keyword == "IPAKITA") return ParseOutput();
-                if (keyword == "DAWAT") return ParseInput();
-                if (keyword == "KUNG") return ParseIf();
-                if (keyword == "ALANG") return ParseLoop();
-            }
-            if (Check(TokenType.Identifier)) return ParseAssignment();
+            var current = Peek();
 
-            throw new Exception($"Unrecognized statement at line {curr?.LineNumber}, column {curr?.ColumnNumber}: '{curr?.Value}'");
+            if (current.Type == TokenType.Keyword && current.Value == "KUNG")
+                return ParseIf();
+            if (current.Type == TokenType.Keyword && current.Value == "ALANG SA")
+                return ParseWhile();
+            if (current.Type == TokenType.Keyword && (current.Value == "IPAKITA" || current.Value == "DAWAT"))
+                return ParseFunctionCall();
+            if (current.Type == TokenType.Identifier && Peek(1).Type == TokenType.AssignmentOperator)
+                return ParseAssignment();
+
+            return ParseExpression();
         }
 
-        // Parse variable declarations: MUGNA NUMERO x = 5
-        private ASTNode ParseDeclaration()
+        private AssignmentNode ParseAssignment()
         {
-            Advance(); // Consume MUGNA
-            var typeToken = Consume(TokenType.DataType, "Expected data type after MUGNA");
+            var name = Expect(TokenType.Identifier, "Expected variable name.");
+            Expect(TokenType.AssignmentOperator, "Expected '='.");
+            var expr = (LiteralNodeBase)ParseExpression();
+            return new AssignmentNode(name.Value, expr);
+        }
 
-            var declarations = new List<AssignmentNode>();
+        private ASTNode ParseExpression()
+        {
+            return ParseBinaryOp();
+        }
+
+        private ASTNode ParseBinaryOp(int parentPrecedence = 0)
+        {
+            ASTNode left = ParsePrimary();
+
             while (true)
             {
-                var identifier = Consume(TokenType.Identifier, "Expected variable name");
-                LiteralNodeBase value = null;
-                if (Match(TokenType.AssignmentOperator))
-                {
-                    value = ParseExpression();
-                }
-                declarations.Add(new AssignmentNode(identifier.Value, value));
+                var opToken = Peek();
+                int precedence = GetPrecedence(opToken.Value);
+                if (precedence == 0 || precedence <= parentPrecedence)
+                    break;
 
-                if (!Match(TokenType.Comma)) break;
+                Next(); // consume operator
+                ASTNode right = ParseBinaryOp(precedence);
+                left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
             }
 
-            return new BlockNode(declarations.Cast<ASTNode>().ToList());
+            return left;
         }
 
-        // Parse variable assignment: x = 5
-        private ASTNode ParseAssignment()
+        private int GetPrecedence(string op)
         {
-            var identifier = Advance();
-            Consume(TokenType.AssignmentOperator, "Expected '=' after identifier");
-            var value = ParseExpression();
-            return new AssignmentNode(identifier.Value, value);
-        }
-
-        // Parse output: IPAKITA: expression
-        private ASTNode ParseOutput()
-        {
-            var token = Advance(); // Consume IPAKITA
-            Consume(TokenType.Colon, "Expected ':' after IPAKITA");
-            var expr = ParseExpression();
-            return new FunctionCallNode(new Token(TokenType.Keyword, "IPAKITA", token.LineNumber, token.ColumnNumber), new List<ASTNode> { expr });
-        }
-
-        // Parse input: DAWAT: x, y
-        private ASTNode ParseInput()
-        {
-            var token = Advance(); // Consume DAWAT
-            Consume(TokenType.Colon, "Expected ':' after DAWAT");
-            var vars = new List<ASTNode>();
-            do
+            return op switch
             {
-                var varToken = Consume(TokenType.Identifier, "Expected variable name");
-                vars.Add(new StringNode(new Token(TokenType.StringLiteral, varToken.Value, varToken.LineNumber, varToken.ColumnNumber)));
-            } while (Match(TokenType.Comma));
-
-            return new FunctionCallNode(new Token(TokenType.Keyword, "DAWAT", token.LineNumber, token.ColumnNumber), vars);
+                "*" or "/" => 2,
+                "+" or "-" => 1,
+                _ => 0,
+            };
         }
 
-        // Parse an if-statement block
-        private ASTNode ParseIf()
+        private ASTNode ParsePrimary()
         {
-            Advance(); // Consume KUNG
-            Consume(TokenType.LeftParen, "Expected '(' after KUNG");
-            var condition = ParseExpression();
-            Consume(TokenType.RightParen, "Expected ')' after condition");
+            var token = Next();
+            return token.Type switch
+            {
+                TokenType.NumberLiteral when token.Value.Contains('.') => new FloatNode(token),
+                TokenType.NumberLiteral => new IntegerNode(token),
+                TokenType.StringLiteral => new StringNode(token),
+                TokenType.BooleanLiteral => new BoolNode(token),
+                TokenType.CharLiteral => new CharNode(token),
+                TokenType.Identifier when Peek().Type == TokenType.LeftParen => ParseFunctionCall(token),
+                _ => throw new Exception($"Unexpected token {token.Type}")
+            };
+        }
 
+        private IfNode ParseIf()
+        {
+            Next(); // consume 'KUNG'
+            var condition = (LiteralNodeBase)ParseExpression();
             var thenBranch = ParseBlock();
-            BlockNode elseBranch = null;
 
-            if (Check(TokenType.Keyword) && curr.Value.ToUpper() == "KUNG WALA")
+            BlockNode? elseBranch = null;
+            if (Peek().Type == TokenType.Keyword && Peek().Value == "KUNG-DILI")
             {
-                Advance();
+                Next(); // consume 'KUNG-DILI'
                 elseBranch = ParseBlock();
             }
 
             return new IfNode(condition, thenBranch, elseBranch);
         }
 
-        // Parse a block of statements enclosed by PUNDOK { }
-        private BlockNode ParseBlock()
+        private WhileNode ParseWhile()
         {
-            Consume(TokenType.Keyword, "Expected PUNDOK block start");
-            Consume(TokenType.LeftBrace, "Expected '{' after PUNDOK");
-            var statements = new List<ASTNode>();
-            while (!Check(TokenType.RightBrace))
-            {
-                statements.Add(ParseStatement());
-            }
-            Consume(TokenType.RightBrace, "Expected '}' to close PUNDOK block");
-            return new BlockNode(statements);
-        }
-
-        // Parse a for-loop (simplified as a while loop for now)
-        private ASTNode ParseLoop()
-        {
-            Advance(); // Consume ALANG
-            Consume(TokenType.Keyword, "Expected SA after ALANG");
-            Consume(TokenType.LeftParen, "Expected '(' after ALANG SA");
-
-            var init = ParseAssignment();
-            var condition = ParseExpression();
-            Consume(TokenType.Comma, "Expected ',' after condition");
-            var update = ParseAssignment();
-            Consume(TokenType.RightParen, "Expected ')' after for header");
-
+            Next(); // consume 'ALANG SA'
+            var condition = (LiteralNodeBase)ParseExpression();
             var body = ParseBlock();
-            return new WhileNode(condition, body); // Simplified loop representation
+            return new WhileNode(condition, body);
         }
 
-        // Parse an expression (entry point for arithmetic and logical operations)
-        public LiteralNodeBase ParseExpression()
+        private FunctionCallNode ParseFunctionCall(Token? overrideToken = null)
         {
-            return ParseTerm();
-        }
+            var nameToken = overrideToken ?? Next();
+            Expect(TokenType.LeftParen, "Expected '(' after function name.");
 
-        // Parse '+' and '-' binary expressions
-        private LiteralNodeBase ParseTerm()
-        {
-            var left = ParseFactor();
-            while (Check(TokenType.ArithmeticOperator) && (curr.Value == "+" || curr.Value == "-"))
+            var args = new List<ASTNode>();
+            if (Peek().Type != TokenType.RightParen)
             {
-                var op = Advance();
-                var right = ParseFactor();
-                left = new BinaryOpNode(left, op, right);
+                do
+                {
+                    args.Add(ParseExpression());
+                } while (Match(TokenType.Comma));
             }
-            return left;
-        }
 
-        // Parse '*', '/', '%' binary expressions
-        private LiteralNodeBase ParseFactor()
-        {
-            var left = ParsePrimary();
-            while (Check(TokenType.ArithmeticOperator) && (curr.Value == "*" || curr.Value == "/" || curr.Value == "%"))
-            {
-                var op = Advance();
-                var right = ParsePrimary();
-                left = new BinaryOpNode(left, op, right);
-            }
-            return left;
-        }
-
-        // Parse literal values (number, string, bool, char)
-        private LiteralNodeBase ParsePrimary()
-        {
-            if (Check(TokenType.NumberLiteral)) return new IntegerNode(Advance());
-            if (Check(TokenType.StringLiteral)) return new StringNode(Advance());
-            if (Check(TokenType.BooleanLiteral)) return new BoolNode(Advance());
-            if (Check(TokenType.CharLiteral)) return new CharNode(Advance());
-
-            throw new Exception($"Unexpected token at line {curr?.LineNumber}, column {curr?.ColumnNumber}: {curr?.Value}");
+            Expect(TokenType.RightParen, "Expected ')' after arguments.");
+            return new FunctionCallNode(nameToken, args);
         }
     }
 }

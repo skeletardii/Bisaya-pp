@@ -5,10 +5,13 @@ using Bisaya__.src.Core;
 
 class Program
 {
-    static void Main(string[] args)
+    static void Main(string[] args) //   !!! PLEASE I READ ANG NOTEPAD TAB !!!
     {
+        //int tesno = 9;
+        string readme = "--READ ME !!!\r\n--ang gi assign sa parser kay wala naka tiwas\r\n--lexer -> parser -> interpreter mn unta\r\n--so lexer ra maka run for now :|\r\n--pero naa ray functions ang evaluator dili lang ma test kay walay parser :| ";
+        //Console.WriteLine(readme);
         // Load source code from test file
-        string content = File.ReadAllText("..\\..\\..\\tests\\testcases\\test9.bpp");
+        string content = File.ReadAllText("..\\..\\..\\tests\\sample.txt");
 
         // === LEXING ===
         Console.WriteLine("=== Lexing ===");
@@ -27,16 +30,16 @@ class Program
         try
         {
             Parser parser = new Parser(tokens);
-            BlockNode ast = parser.ParseProgram();
+            ASTNode ast = parser.Parse();
 
             Console.WriteLine("✅ Parsing successful!");
             Console.WriteLine($"Root node type: {ast.GetType().Name}");
-            Console.WriteLine($"Statements in root block: {ast.Statements.Count}");
+            //Console.WriteLine($"Statements in root block: {ast.Statements.Count}");
 
-            foreach (var stmt in ast.Statements)
-            {
-                Console.WriteLine($"• {stmt.GetType().Name}");
-            }
+            //foreach (var stmt in ast.Statements)
+            //{
+            //    Console.WriteLine($"• {stmt.GetType().Name}");
+            //}
 
             // === AST TREE PRINT ===
             Console.WriteLine("\n=== AST Tree ===");
@@ -45,6 +48,8 @@ class Program
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Parsing failed: {ex.Message}");
+            Console.WriteLine(ex.StackTrace.ToString() );
+            Console.WriteLine("\n==============================\n"+readme+ "\n==============================");
         }
     }
 
