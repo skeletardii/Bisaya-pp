@@ -12,23 +12,21 @@ Tokens make parsing easier by structuring the input into logical parts.
  */
 namespace Bisaya__.src.Core
 {
-    internal class Token
+    public class Token
     {
         public TokenType Type { get; }
-        public string? Value { get; }
+        public string Value { get; }
+        public int LineNumber { get; } // Line number in the source code
+        public int ColumnNumber { get; } // Column number in the source code
 
-        public Token(TokenType type, string value)
+        public Token(TokenType type, string value, int lineNumber, int columnNumber)
         {
             if (!Enum.IsDefined(typeof(TokenType), type))
                 throw new ArgumentException($"Invalid token type: {type}");
             Type = type;
             Value = value;
-        }
-        public Token(TokenType type)
-        {
-            if (!Enum.IsDefined(typeof(TokenType), type))
-                throw new ArgumentException($"Invalid token type: {type}");
-            Type = type;
+            LineNumber = lineNumber;
+            ColumnNumber = columnNumber;
         }
     }
     public enum TokenType
@@ -49,12 +47,15 @@ namespace Bisaya__.src.Core
         RelationalOperator,
         AssignmentOperator,
         Concatenator,
+        CarriageReturn,
 
         // Delimiters
         LeftParen,
         RightParen,
         LeftBrace,
         RightBrace,
+        LeftCurly,
+        RightCurly,
         Comma,
         Colon
     }
