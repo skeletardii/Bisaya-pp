@@ -3,22 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Env = Bisaya__.src.Core.Environment;
-/*
-The Evaluator executes the AST by walking through it in post order.
 
-For example, given the AST for 5 + 10, the evaluator:
-    1. Visits the left node (5).
-    2. Visits the right node (10).
-    3. Applies the operator (+).
-    4. Returns 15.
-
-The evaluator can also:
-    1. Handle variables (e.g., storing values in memory).
-    2. Execute functions (e.g., calling built-in or user-defined functions).
-    3. Manage scope (e.g., function-level vs. global variables).
- */
 namespace Bisaya__.src.Core
 {
     internal class Evaluator
@@ -27,29 +13,39 @@ namespace Bisaya__.src.Core
         {
             handleBlock(bn);
         }
+
         private static ASTNode autoExec(ASTNode node)
         {
             ASTNode res = node;
+
             if (node.GetType() == typeof(IntegerNode))
                 res = (IntegerNode)node;
-            if (node.GetType() == typeof(FloatNode))
+            else if (node.GetType() == typeof(FloatNode))
                 res = (FloatNode)node;
-            if (node.GetType() == typeof(BoolNode))
+            else if (node.GetType() == typeof(BoolNode))
                 res = (BoolNode)node;
-            if (node.GetType() == typeof(FloatNode))
-                res = (FloatNode)node;
-            if (node.GetType() == typeof(VariableNode))
+            else if (node.GetType() == typeof(CharNode))
+                res = (CharNode)node;
+            else if (node.GetType() == typeof(VariableNode))
                 res = handleVariable((VariableNode)node);
-            if (node.GetType() == typeof(BinaryOpNode))
+            else if (node.GetType() == typeof(BinaryOpNode))
                 res = handleBinaryOp((BinaryOpNode)node);
-            if (node.GetType() == typeof(AssignmentNode))
-                return (AssignmentNode)node;
-            if (node.GetType() == typeof(BlockNode))
-                return (BlockNode)node;
+            else if (node.GetType() == typeof(AssignmentNode))
+                res = handleAssignment((AssignmentNode)node);
+            else if (node.GetType() == typeof(BlockNode))
+                res = handleBlock((BlockNode)node);
+            else if (node.GetType() == typeof(IfNode))
+                res = handleIf((IfNode)node);
+            else if (node.GetType() == typeof(WhileNode))
+                res = handleWhile((WhileNode)node);
+            else if (node.GetType() == typeof(FunctionCallNode))
+                res = handleFunctionCall((FunctionCallNode)node);
+            //else if (node.GetType() == typeof(PrintNode))
+            //    res = handlePrint((PrintNode)node);
+
             return res;
         }
 
-        
         private static ASTNode handleBlock(BlockNode block)
         {
             List<ASTNode> queue = block.Statements;
@@ -59,62 +55,159 @@ namespace Bisaya__.src.Core
             }
             return null;
         }
-        private static NumberNode handleBinaryOp(BinaryOpNode curr)
+
+        private static LiteralNodeBase handleBinaryOp(BinaryOpNode curr)
         {
-            ASTNode left = curr.Left;
-            ASTNode right = curr.Right;
-            string op = curr.OperatorToken.Value;
-            float leftval;
-            float rightval;
-            string res;
-            if (op == "+")
-                res = "" + (leftval + rightval);
-            else if (op == "-")
-                res = "" + (leftval - rightval);
-            else if (op == "*")
-                res = "" + (leftval * rightval);
-            else if (op == "/")
-                res = "" + (leftval / rightval);
-            return new NumberNode(new Token(TokenType.NumberLiteral,res));
+            LiteralNodeBase left = (LiteralNodeBase)autoExec(curr.Left);
+            LiteralNodeBase right = (LiteralNodeBase)autoExec(curr.Right);
+            LiteralNodeBase resNode = null;
+            dynamic leftval = getLiteralValue(left);
+            dynamic rightval = getLiteralValue(right);
+            string op = curr.Operator;
+            dynamic res = null;
+
+            switch (op)
+            {
+                case "+":
+                    res = leftval + rightval;
+                    break;
+                case "-":
+                    res = leftval - rightval;
+                    break;
+                case "*":
+                    res = leftval * rightval;
+                    break;
+                case "/":
+                    res = leftval / rightval;
+                    break;
+                case "%":
+                    res = leftval % rightval;
+                    break;
+            }
+
+            Type type = res?.GetType();
+            if (type == typeof(float))
+                resNode = new FloatNode((float)res);
+            else if (type == typeof(int))
+                resNode = new IntegerNode((int)res);
+            else if (type == typeof(bool))
+                resNode = new BoolNode((bool)res);
+
+            resNode.Parent = curr.Parent;
+            return resNode;
         }
-        private static NumberNode handleAssignment(AssignmentNode curr)
+
+        private static LiteralNodeBase handleAssignment(AssignmentNode curr)
         {
-            string varName = curr.Identifier.Value;
-            dynamic value = curr.Value.Value;
-            return new NumberNode(new Token(TokenType.));
+            string varName = curr.VariableName;
+            dynamic value = getLiteralValue(curr.Value);
+            Env.Set(varName, value);
+            return valToLiteral(value);
         }
+
         private static ASTNode handleVariable(VariableNode node)
         {
-            dynamic value = Env.Get(node.Name);
+            dynamic value = Env.Get(node.VariableName);
             ASTNode par = node.Parent;
             ASTNode res;
             Type type = value.GetType();
+
             if (type == typeof(float))
                 res = new FloatNode((float)value);
             else if (type == typeof(int))
-                res = new IntNode((int)value);
+                res = new IntegerNode((int)value);
             else if (type == typeof(char))
                 res = new CharNode((char)value);
             else if (type == typeof(bool))
                 res = new BoolNode((bool)value);
             else
-                throw new Exception("gay");
+                throw new Exception("Unsupported type.");
+
             res.Parent = par;
             return res;
         }
-        private static dynamic autoCast(ASTNode node)
+
+        private static dynamic getLiteralValue(LiteralNodeBase node)
         {
-            if (node.GetType() == typeof(NumberNode))
-                return (NumberNode)node;
-            if (node.GetType() == typeof(VariableNode))
-                return (VariableNode)node;
-            if (node.GetType() == typeof(BinaryOpNode))
-                return (BinaryOpNode)node;
-            if (node.GetType() == typeof(AssignmentNode))
-                return (AssignmentNode)node;
-            if (node.GetType() == typeof(BlockNode))
-                return (BlockNode)node;
-            return node;
+            if (node.GetType() == typeof(IntegerNode))
+                return ((IntegerNode)node).Value;
+            if (node.GetType() == typeof(FloatNode))
+                return ((FloatNode)node).Value;
+            if (node.GetType() == typeof(BoolNode))
+                return ((BoolNode)node).Value;
+            if (node.GetType() == typeof(CharNode))
+                return ((CharNode)node).Value;
+            return null;
         }
+
+        private static LiteralNodeBase valToLiteral(dynamic value)
+        {
+            LiteralNodeBase res = null;
+            Type type = value.GetType();
+
+            if (type == typeof(float))
+                res = new FloatNode((float)value);
+            else if (type == typeof(int))
+                res = new IntegerNode((int)value);
+            else if (type == typeof(char))
+                res = new CharNode((char)value);
+            else if (type == typeof(bool))
+                res = new BoolNode((bool)value);
+            else if (type == typeof(string))
+                res = new StringNode((string)value);
+
+            return res;
+        }
+
+        // Handle If statement
+        private static ASTNode handleIf(IfNode node)
+        {
+            dynamic conditionValue = getLiteralValue(node.Condition);
+            if (conditionValue)
+            {
+                autoExec(node.ThenBranch);
+            }
+            else
+            {
+                if (node.ElseBranch != null)
+                    autoExec(node.ElseBranch);
+            }
+            return null;
+        }
+
+        // Handle While loop
+        private static ASTNode handleWhile(WhileNode node)
+        {
+            while (true)
+            {
+                dynamic conditionValue = getLiteralValue(node.Condition);
+                if (!conditionValue)
+                    break;
+                autoExec(node.Body);
+            }
+            return null;
+        }
+
+        // Handle Function calls (e.g., Print)
+        private static ASTNode handleFunctionCall(FunctionCallNode node)
+        {
+            if (node.FunctionName == "print")
+            {
+                foreach (var arg in node.Arguments)
+                {
+                    dynamic value = getLiteralValue((LiteralNodeBase)autoExec(arg));
+                    Console.Write(value);
+                }
+            }
+            return null;
+        }
+
+        // Handle Print statement
+        //private static ASTNode handlePrint(PrintNode node)
+        //{
+        //    dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Value));
+        //    Console.WriteLine(value);
+        //    return null;
+        //}
     }
 }
