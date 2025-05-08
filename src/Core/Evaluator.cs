@@ -38,8 +38,12 @@ namespace Bisaya__.src.Core
                 res = handleIf((IfNode)node);
             else if (node.GetType() == typeof(WhileNode))
                 res = handleWhile((WhileNode)node);
-            else if (node.GetType() == typeof(FunctionCallNode))
-                res = handleFunctionCall((FunctionCallNode)node);
+            else if (node.GetType() == typeof(DeclarationNode))
+                res = handleDeclaration((DeclarationNode)node);
+            //else if (node.GetType() == typeof(FunctionCallNode))
+            //    res = handleFunctionCall((FunctionCallNode)node);
+            else if (node.GetType() == typeof(OutputNode))
+                res = handlePrint((OutputNode)node);
             //else if (node.GetType() == typeof(PrintNode))
             //    res = handlePrint((PrintNode)node);
 
@@ -99,16 +103,27 @@ namespace Bisaya__.src.Core
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
         {
+            Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
             string varName = curr.VariableName;
             dynamic value = getLiteralValue(curr.Value);
             Env.Set(varName, value);
             return valToLiteral(value);
         }
-
+        private static ASTNode handleDeclaration(DeclarationNode curr)
+        {
+            string varName = curr.VariableName;
+            Type t = curr.VariableType;
+            dynamic value = null;
+            value = getLiteralValue(curr.InitialValue);
+            value = Convert.ChangeType(value, t);
+            if (value.GetType() == typeof(string) && value.Length == 1)
+                value = Convert.ChangeType(value, typeof(char));
+            Env.Set(varName, value);
+            return valToLiteral(value);
+        }
         private static ASTNode handleVariable(VariableNode node)
         {
             dynamic value = Env.Get(node.VariableName);
-            ASTNode par = node.Parent;
             ASTNode res;
             Type type = value.GetType();
 
@@ -123,12 +138,13 @@ namespace Bisaya__.src.Core
             else
                 throw new Exception("Unsupported type.");
 
-            res.Parent = par;
             return res;
         }
 
         private static dynamic getLiteralValue(LiteralNodeBase node)
         {
+            if (node.GetType() == typeof(BinaryOpNode))
+                return getLiteralValue((LiteralNodeBase)autoExec((BinaryOpNode)node));
             if (node.GetType() == typeof(IntegerNode))
                 return ((IntegerNode)node).Value;
             if (node.GetType() == typeof(FloatNode))
@@ -189,25 +205,25 @@ namespace Bisaya__.src.Core
         }
 
         // Handle Function calls (e.g., Print)
-        private static ASTNode handleFunctionCall(FunctionCallNode node)
-        {
-            if (node.FunctionName == "print")
-            {
-                foreach (var arg in node.Arguments)
-                {
-                    dynamic value = getLiteralValue((LiteralNodeBase)autoExec(arg));
-                    Console.Write(value);
-                }
-            }
-            return null;
-        }
-
-        // Handle Print statement
-        //private static ASTNode handlePrint(PrintNode node)
+        //private static ASTNode handOutputNode(OutputNode node)
         //{
-        //    dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Value));
-        //    Console.WriteLine(value);
+        //    if (node.FunctionName == "IPAKITA")
+        //    {
+        //        foreach (var arg in node.Arguments)
+        //        {
+        //            dynamic value = getLiteralValue((LiteralNodeBase)autoExec(arg));
+        //            Console.Write(value);
+        //        }
+        //    }
         //    return null;
         //}
+
+        //Handle Print statement
+        private static ASTNode handlePrint(OutputNode node)
+        {
+            dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Expression));
+            Console.WriteLine(value);
+            return null;
+        }
     }
 }

@@ -43,6 +43,7 @@ namespace Bisaya__.src.Core
         {
             if (token.Type != TokenType.Identifier)
                 throw new ArgumentException($"Expected an identifier token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
+            VariableName = token.Value;
         }
     }
     // Base for number nodes

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 using Bisaya__.src.Core;
 
 class Program
 {
+    public static bool verbose = false;
     static void Main(string[] args) //   !!! PLEASE I READ ANG NOTEPAD TAB !!!
     {
         //int tesno = 9;
@@ -27,10 +29,11 @@ class Program
 
         // === PARSING ===
         Console.WriteLine("\n=== Parsing ===");
+        BlockNode ast = null;
         try
         {
             Parser parser = new Parser(tokens);
-            BlockNode ast = (BlockNode)parser.ParseProgram();
+            ast = (BlockNode)parser.ParseProgram();
 
             Console.WriteLine("✅ Parsing successful!");
             Console.WriteLine($"Root node type: {ast.GetType().Name}");
@@ -51,6 +54,10 @@ class Program
             Console.WriteLine(ex.StackTrace.ToString());
             Console.WriteLine("\n==============================\n" + readme + "\n==============================");
         }
+
+        // === EVALUATION ===
+        Console.WriteLine("\n=== Evaluating ===");
+        Evaluator.evaluate(ast);
     }
 
     // Helper to align text
@@ -134,6 +141,19 @@ class Program
                     PrintAST(loop.Body, indent + 1);
                 else
                     Console.WriteLine($"{indentStr}    <null>");
+                break;
+
+            case DeclarationNode declaration:
+                Console.WriteLine($"{indentStr}  Var: {declaration.VariableName}");
+                PrintAST(declaration.InitialValue, indent + 1);
+                break;
+
+            case OutputNode output:
+                PrintAST(output.Expression, indent + 1);
+                break;
+
+            case VariableNode varnode:
+                Console.WriteLine($"{indentStr}  Var: {varnode.VariableName}");
                 break;
 
             case LiteralNodeBase literal:
