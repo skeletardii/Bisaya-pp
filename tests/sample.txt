@@ -1,18 +1,19 @@
 SUGOD
-    MUGNA NUMERO x, y, z=5
-    MUGNA LETRA a_1='n'
-    MUGNA TINUOD t="OO"
-    x=y=4
-    a_1='c'
-    -- this is a comment
-    IPAKITA: x & t & z & $ & a_1 & [#] & "last"
+	MUGNA NUMERO a
+	MUGNA LETRA p = 'p'
+	MUGNA LETRA n = 'n'
+	MUGNA LETRA z = 'z'
+	DAWAT: a
+	KUNG (a> 0)
+	PUNDOK{
+		IPAKITA: p
+	}
+	KUNG DILI (a< 0)
+	PUNDOK{
+		IPAKITA: n
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: z
+	}
 KATAPUSAN
-
-
-SOGOD
-    MUGNA NUMERO x = 2
-    MUGNA NUMERO y = 3
-    MUGNA NUMERO z = x + y
-    IPAKITA: z
-KATAPUSAN
-
