@@ -59,13 +59,17 @@ namespace Bisaya__.src.Core
 
         public ASTNode ParseProgram()
         {
-            var statements = new List<ASTNode>();
-            while (Current != null)
-            {
-                statements.Add(ParseStatement());
-            }
-            return new BlockNode(statements);
+            if (Current == null)
+                throw new Exception("Program is empty.");
+
+            var root = ParseStatement();
+
+            if (Current != null)
+                throw new Exception("Unexpected tokens after program block.");
+
+            return root;
         }
+
 
         private ASTNode ParseStatement()
         {
@@ -73,12 +77,18 @@ namespace Bisaya__.src.Core
             if (Current.Type == TokenType.Keyword && Current.Value == "KUNG") return ParseIfStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "SAMTANG") return ParseWhileStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "ALANG SA") return ParseForLoop();
+            if ((Current.Type == TokenType.Keyword && Current.Value == "DAWAT")) return ParseInputStatement();
 
-            // Check for the 'MUGNA' keyword here to handle variable declarations
+            if (Current.Type == TokenType.Keyword && Current.Value == "IPAKITA")
+            {
+                return ParseOutputStatement();  // Handle 'IPAKITA' print statement
+            }
+
             if (Current.Type == TokenType.Keyword && Current.Value == "MUGNA")
             {
                 return ParseDeclaration();
             }
+
             if (Current.Type == TokenType.DataType)
             {
                 var dataTypeToken = Advance();  // e.g., NUMERO, TINUOD, TIPIK
@@ -87,6 +97,7 @@ namespace Bisaya__.src.Core
 
             return ParseAssignmentOrExpression();
         }
+
 
 
 
@@ -117,21 +128,82 @@ namespace Bisaya__.src.Core
             return new BlockNode(statements);
         }
 
-        private ASTNode ParseIfStatement()
+        private ASTNode ParseOutputStatement()
         {
-            Advance(); // 'KUNG'
-            Expect(TokenType.LeftParen, "Expected '(' after 'KUNG'.");
-            var condition = ParseExpression();
-            Expect(TokenType.RightParen, "Expected ')' after condition.");
-            var thenBranch = ParseBlock();
-            BlockNode elseBranch = null;
-            if (Current.Type == TokenType.Keyword && Current.Value == "KUNGDILI")
+            Expect(TokenType.Keyword, "Expected 'IPAKITA'.");
+            Expect(TokenType.Colon, "Expected ':' after 'IPAKITA'.");
+            if(Current.Type == TokenType.Identifier)
             {
-                Advance();
-                elseBranch = ParseBlock();
+                return new OutputNode(new VariableNode(Advance()));
             }
-            return new IfNode((LiteralNodeBase)condition, thenBranch, elseBranch);
+            var expression = ParseExpression();
+            return new OutputNode(expression);
         }
+
+
+        private ASTNode ParseInputStatement()
+        {
+            Expect(TokenType.Keyword, "Expected 'DAWAT' keyword.");
+            Expect(TokenType.Colon, "Expected ':' after 'DAWAT'");
+
+            if (Current.Type != TokenType.Identifier)
+                throw new Exception($"Expected identifier after ':'. Found {Current.Type}.");
+
+            var identifier = Advance().Value;  
+            return new InputNode(identifier);
+        }
+        public ASTNode ParseIfStatement()
+        {
+            // Parse the 'KUNG' keyword
+            Expect(TokenType.Keyword, "KUNG");
+
+            // Parse the condition (e.g., 'a > 0')
+            var condition = ParseExpression(new TokenType[] { TokenType.Keyword });
+
+            // Expect the 'PUNDOK' keyword to start the block
+            Expect(TokenType.Keyword, "PUNDOK");
+
+            // Parse the block (statements inside the 'if')
+            var block = ParseBlock();
+
+            // Check if there's an 'else if' or 'else' clause
+            if (Current.Type == TokenType.Keyword && Current.Value == "DILI")
+            {
+                // Parse the 'DILI' keyword for 'else if'
+                Advance();
+
+                // Parse the 'KUNG' keyword for 'else if'
+                Expect(TokenType.Keyword, "KUNG");
+
+                // Parse the 'else if' condition
+                var elseIfCondition = ParseExpression(new TokenType[] { TokenType.Keyword });
+
+                // Expect 'PUNDOK' for the 'else if' block
+                Expect(TokenType.Keyword, "PUNDOK");
+
+                // Parse the 'else if' block
+                var elseIfBlock = ParseIfStatement();
+
+                // Return the 'if' node with the 'else if' block
+                return new IfNode((LiteralNodeBase)condition, block, new IfNode((LiteralNodeBase)elseIfCondition, elseIfBlock));
+            }
+
+            // Check for 'else' clause (i.e., 'WALA')
+            if (Current.Type == TokenType.Keyword && Current.Value == "WALA")
+            {
+                // Parse the 'WALA' keyword for 'else'
+                Advance();
+
+                // Parse the 'else' block
+                var elseBlock = ParseBlock();
+
+                // Return the 'if' node with the 'else' block
+                return new IfNode((LiteralNodeBase)condition, block, elseBlock);
+            }
+
+            return new IfNode((LiteralNodeBase)condition, block); // Return the 'if' node without the 'else if' or 'else' block
+        }
+
 
         private ASTNode ParseWhileStatement()
         {
@@ -145,11 +217,13 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseForLoop()
         {
-            Expect(TokenType.Keyword, "Expected 'sa' keyword after 'ALANG'.");
-            if (Current.Value != "sa")
-                throw new Exception("Expected 'sa' keyword after 'ALANG'.");
-            Advance(); // consume 'sa'
+            Expect(TokenType.Keyword, "Expected 'ALANG' keyword.");
+            if (Current.Value != "ALANG") throw new Exception("Expected 'ALANG' keyword.");
+            Advance(); // Consume 'ALANG'
 
+            Expect(TokenType.Keyword, "Expected 'SA' keyword.");
+            if (Current.Value != "SA") throw new Exception("Expected 'SA' keyword.");
+            Advance(); // Consume 'SA'
 
             var initialization = (AssignmentNode)ParseExpression();
             Expect(TokenType.Comma, "Expected ',' after initialization.");
@@ -165,6 +239,7 @@ namespace Bisaya__.src.Core
             return new ForLoopNode(initialization, condition, increment, body);
         }
 
+
         private ASTNode ParseDeclaration()
         {
             Advance(); // consume 'MUGNA'
@@ -178,7 +253,7 @@ namespace Bisaya__.src.Core
             while (true)
             {
                 if (Current?.Type != TokenType.Identifier)
-                    throw new Exception("Expected variable name.");
+                    throw new Exception("Expected valid variable name.");
 
                 var nameToken = Current;
                 Advance();
@@ -213,7 +288,7 @@ namespace Bisaya__.src.Core
             while (true)
             {
                 var nameToken = Current;
-                Expect(TokenType.Identifier, "Expected variable name after data type.");
+                Expect(TokenType.Identifier, $"Error at line {Current.LineNumber} column {Current.ColumnNumber}: Expected valid variable name but got {Current.Type}:{Current.Value}");
 
                 LiteralNodeBase initValue = null;
 
@@ -232,6 +307,8 @@ namespace Bisaya__.src.Core
                 Advance(); // consume comma, continue loop
             }
 
+            if (declarations.Count == 1)
+                return declarations[0];
             return new BlockNode(declarations.Cast<ASTNode>().ToList());
         }
 
@@ -284,6 +361,11 @@ namespace Bisaya__.src.Core
                     return new StringNode(token);  // Handle string literals
                 case TokenType.BooleanLiteral:
                     return new BoolNode(token);  // Handle boolean literals
+                case TokenType.CharLiteral:
+                    return new CharNode(token);  // Handle character literals
+                case TokenType.RelationalOperator: // Handle relational operators like '>'
+                    return ParseBinaryOperation(0); // Use the ParseBinaryOperation to handle the relational operation
+
                 case TokenType.Identifier:
                     if (Current != null && Current.Type == TokenType.LeftParen)
                     {
@@ -304,9 +386,8 @@ namespace Bisaya__.src.Core
                     var expr = ParseExpression();
                     Expect(TokenType.RightParen, "Expected ')' after expression.");
                     return expr;
-                case TokenType.DataType:  // If the token is a data type (like NUMERO, TINUOD, TIPIK)
-                                          // Handle data type tokens specifically for declarations (e.g., MUGNA NUMERO x = 5;)
-                    return ParseDeclarationWithDataType(token);  // Pass data type token to handle the declaration
+                case TokenType.DataType:
+                    throw new Exception("Unexpected data type in expression.");
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }
@@ -330,7 +411,7 @@ namespace Bisaya__.src.Core
             return token.Type switch
             {
                 TokenType.ArithmeticOperator => token.Value == "+" || token.Value == "-" ? 1 : 2,
-                TokenType.RelationalOperator => 3,
+                TokenType.RelationalOperator => 3,  // Handle relational operators like '>', '<', etc.
                 TokenType.LogicalOperator => 4,
                 _ => 0
             };
@@ -338,14 +419,23 @@ namespace Bisaya__.src.Core
 
         private BlockNode ParseBlock()
         {
-            Expect(TokenType.LeftBrace, "Expected '{' to start block.");
+            // Ensure we have '{' to start the block
+            Expect(TokenType.LeftCurly, "Expected '{' to start block.");
+
             var statements = new List<ASTNode>();
-            while (Current != null && Current.Type != TokenType.RightBrace)
+
+            // Parse statements until we encounter '}'
+            while (Current != null && Current.Type != TokenType.RightCurly)
             {
+                // Parse each statement
                 statements.Add(ParseStatement());
             }
-            Expect(TokenType.RightBrace, "Expected '}' to end block.");
+
+            // Expect '}' to close the block
+            Expect(TokenType.RightCurly, "Expected '}' to end block.");
+
             return new BlockNode(statements);
         }
+
     }
 }

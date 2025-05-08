@@ -1,6 +1,19 @@
--- this is a comment
 SUGOD
-	-- this is a sample program in Bisaya++
-	MUGNA NUMERO x
+	MUGNA NUMERO a
+	MUGNA LETRA p = 'p'
+	MUGNA LETRA n = 'n'
+	MUGNA LETRA z = 'z'
+	DAWAT: a
+	KUNG (a> 0)
+	PUNDOK{
+		IPAKITA: p
+	}
+	KUNG DILI (a< 0)
+	PUNDOK{
+		IPAKITA: n
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: z
+	}
 KATAPUSAN
--- this line is skipped
