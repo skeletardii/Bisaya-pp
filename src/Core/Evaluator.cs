@@ -83,6 +83,25 @@ namespace Bisaya__.src.Core
                 case "%":
                     res = leftval % rightval;
                     break;
+                case "==":
+                    res = leftval == rightval;
+                    break;
+                case ">":
+                    res = leftval > rightval;
+                    break;
+                case "<":
+                    res = leftval < rightval;
+                    break;
+                case "<=":
+                    res = leftval <= rightval;
+                    break;
+                case ">=":
+                    res = leftval >= rightval;
+                    break;
+                case "<>":
+                    res = leftval < rightval && leftval > rightval;
+                    break;
+
             }
 
             Type type = res?.GetType();
