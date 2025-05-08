@@ -193,16 +193,28 @@ namespace Bisaya__.src.Core
                         tokenType = TokenType.RelationalOperator;
 
                         // Check for 2-character relational operators first
-                        if (i + 1 < line.Length)
+                        // Check for possible relational operators (e.g., >, <, >=, <=, ==, <>)
+                        if ("<>=".Contains(currentChar))
                         {
-                            symbol = line.Substring(i, 2);
-                            if (relationalOperators.Contains(symbol))
+                            string twoCharSymbol = (i + 1 < line.Length) ? line.Substring(i, 2) : null;
+
+                            if (twoCharSymbol != null && relationalOperators.Contains(twoCharSymbol))
                             {
-                                lineTokens.Add(new Token(TokenType.RelationalOperator, symbol, lineNumber, currentColumn));
-                                i++; // Skip an extra char
-                                continue;
+                                lineTokens.Add(new Token(TokenType.RelationalOperator, twoCharSymbol, lineNumber, currentColumn));
+                                i++; // Skip additional character
                             }
+                            else if (relationalOperators.Contains(currentChar.ToString()))
+                            {
+                                lineTokens.Add(new Token(TokenType.RelationalOperator, currentChar.ToString(), lineNumber, currentColumn));
+                            }
+                            else
+                            {
+                                throw new InvalidExpressionException($"Invalid relational operator near '{currentChar}'");
+                            }
+
+                            continue;
                         }
+
 
                         // Check for 1-character relational operators
                         if (relationalOperators.Contains(symbol))
