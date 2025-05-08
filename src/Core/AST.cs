@@ -28,7 +28,7 @@ namespace Bisaya__.src.Core
         protected LiteralNode(Token token)
         {
             if (token.Value == null)
-                throw new ArgumentException("Token must have a value.");
+                throw new ArgumentException($"Token must have a value at line {token.LineNumber}, column {token.ColumnNumber}.");
         }
         protected LiteralNode(T val)
         {
@@ -42,7 +42,7 @@ namespace Bisaya__.src.Core
         protected VariableNode(Token token)
         {
             if (token.Type != TokenType.Identifier)
-                throw new ArgumentException("Expected an identifier token with value.");
+                throw new ArgumentException($"Expected an identifier token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
         }
     }
     // Base for number nodes
@@ -89,7 +89,7 @@ namespace Bisaya__.src.Core
         public BoolNode(Token token) : base(token)
         {
             if (token.Type != TokenType.BooleanLiteral || token.Value == null)
-                throw new ArgumentException("Expected a BooleanLiteral token with value.");
+                throw new ArgumentException($"Expected a BooleanLiteral token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
             if (token.Value == "OO")
                 Value = true;
             Value = false;
@@ -103,7 +103,7 @@ namespace Bisaya__.src.Core
         public StringNode(Token token) : base(token)
         {
             if (token.Type != TokenType.StringLiteral || token.Value == null)
-                throw new ArgumentException("Expected a StringLiteral token with a value.");
+                throw new ArgumentException($"Expected a StringLiteral token with a value. Line {token.LineNumber} Col {token.ColumnNumber}");
             Value = token.Value;
         }
         public StringNode(string value) : base(value) { Value = value; }
@@ -119,7 +119,7 @@ namespace Bisaya__.src.Core
         public BinaryOpNode(LiteralNodeBase left, Token opToken, LiteralNodeBase right)
         {
             if (opToken.Value == null)
-                throw new ArgumentException("Operator token must have a value.");
+                throw new ArgumentException($"Operator token must have a value at line {opToken.LineNumber}, column {opToken.ColumnNumber}.");
 
             Left = left;
             Operator = opToken.Value;
@@ -140,7 +140,7 @@ namespace Bisaya__.src.Core
         public AssignmentNode(string name, LiteralNodeBase value)
         {
             if (value == null)
-                throw new ArgumentException("Expected an token with a valid value.");
+                throw new ArgumentException($"Expected an token with a valid value. Var {name} : {value}");
             Value = value;
             VariableName = name;
             Value.Parent = this;
@@ -216,7 +216,7 @@ namespace Bisaya__.src.Core
         public FunctionCallNode(Token nameToken, List<ASTNode> arguments)
         {
             if (nameToken.Type != TokenType.Keyword || nameToken.Value == null)
-                throw new ArgumentException("Expected an Identifier token with a value.");
+                throw new ArgumentException($"Expected an Identifier token with a value. Line {nameToken.LineNumber} Col {nameToken.ColumnNumber}");
             FunctionName = nameToken.Value;
             Arguments = arguments;
 
@@ -235,14 +235,14 @@ namespace Bisaya__.src.Core
         public FunctionDefNode(Token nameToken, List<Token> parameterTokens, ASTNode body)
         {
             if (nameToken.Type != TokenType.Identifier || nameToken.Value == null)
-                throw new ArgumentException("Expected an Identifier token with a value.");
+                throw new ArgumentException($"Expected an Identifier token with a value at line {nameToken.LineNumber}, column {nameToken.ColumnNumber}.");
             Name = nameToken.Value;
 
             Parameters = new List<string>();
             foreach (var param in parameterTokens)
             {
                 if (param.Type != TokenType.Identifier || param.Value == null)
-                    throw new ArgumentException("Function parameter must be an Identifier token with a value.");
+                    throw new ArgumentException($"Function parameter must be an Identifier token with a value at line {nameToken.LineNumber}, column {nameToken.ColumnNumber}.");
                 Parameters.Add(param.Value);
             }
 

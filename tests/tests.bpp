@@ -80,3 +80,185 @@ SUGOD
 	DAWAT: a
 	IPAKITA: DILI a
 KATAPUSAN
+
+13:
+SUGOD
+	MUGNA TINUOD a = "OO", b = "DILI", c = OO
+	DAWAT: a
+KATAPUSAN
+
+14:
+SUGOD
+	MUGNA NUMERO a = 3, b = 4, c, d
+	DAWAT: c
+	d = (3 + 4) * c
+	IPAKITA: d
+KATAPUSAN
+
+15:
+SUGOD
+	MUGNA TINUOD a = "OO", b = "DILI" , c, d
+	DAWAT: c
+	d = (b O c) UG a 
+	IPAKITA: d
+KATAPUSAN
+16:
+SUGOD
+	MUGNA NUMERO a
+	DAWAT: a
+	KUNG (a<10)
+	PUNDOK{
+		IPAKITA: a + 10
+	}
+KATAPUSAN
+17:
+SUGOD
+	MUGNA LETRA c, d = 'a'
+	DAWAT: c
+	KUNG (c<>'a')
+	PUNDOK{
+		IPAKITA: c
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: d
+	}
+KATAPUSAN
+SUGOD
+	MUGNA NUMERO age
+	MUGNA LETRA s = 's'
+	MUGNA LETRA a = 'a'
+	MUGNA LETRA c = 'c'
+	DAWAT: age
+	KUNG (age>=60)
+	PUNDOK{
+		IPAKITA: s
+	}
+	KUNG DILI (a>=18)
+	PUNDOK{
+		IPAKITA: a
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: c
+	}
+KATAPUSAN
+SUGOD
+	MUGNA NUMERO age
+	MUGNA LETRA s = 's'
+	MUGNA LETRA a = 'a'
+	MUGNA LETRA c = 'c'
+	MUGNA LETRA g
+	MUGNA LETRA b = 'b'
+	MUGNA LETRA l = 'l'
+	DAWAT: age
+	DAWAT: g
+	KUNG (age>=60)
+	PUNDOK{
+		IPAKITA: s
+		KUNG((g=='F') O (g=='f'))
+		PUNDOK{
+			IPAKITA: b
+		}
+		KUNG WALA
+		PUNDOK{
+			IPAKITA: l
+		}
+	}
+	KUNG DILI (age>=18)
+	PUNDOK{
+		IPAKITA: a
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: c
+	}
+KATAPUSAN
+
+SUGOD
+	MUGNA NUMERO a = 1, b, c
+	MUGNA LETRA as = 'x'
+	DAWAT: c
+	ALANG SA (a=1, a<=c, a++)
+	PUNDOK{
+		ALANG SA (b=1, b<=a, b++)
+		PUNDOK{
+			IPAKITA: a
+		}
+		IPAKITA: $
+	}
+KATAPUSAN
+
+SUGOD
+	MUGNA NUMERO a = 1
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
+	PUNDOK{
+		IPAKITA: a & $
+	}
+KATAPUSASUGOD
+	MUGNA NUMERO a = 1
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
+	PUNDOK{
+		IPAKITA: a & $
+	}
+KATAPUSA
+
+SUGOD
+	MUGNA NUMERO a
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
+	PUNDOK{
+		KUNG(a%2 <> 0)
+		PUNDOK{
+			IPAKITA: a & $
+		}
+	}
+KATAPUSANSUGOD
+	MUGNA NUMERO a
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
+	PUNDOK{
+		KUNG(a%2 <> 0)
+		PUNDOK{
+			IPAKITA: a & $
+		}
+	}
+KATAPUSAN
+
+SUGOD
+	MUGNA NUMERO age
+	MUGNA LETRA s = 's'
+	MUGNA LETRA a = 'a'
+	MUGNA LETRA c = 'c'
+	MUGNA LETRA g
+	MUGNA LETRA b = 'b'
+	MUGNA LETRA l = 'l'
+	DAWAT: age
+	DAWAT: g
+	KUNG (age>=60)
+	PUNDOK{
+		IPAKITA: s
+		KUNG((g=='F') O (g=='f'))
+		PUNDOK{
+			IPAKITA: b
+		}
+		KUNG WALA
+		PUNDOK{
+			IPAKITA: l
+		}
+	}
+	KUNG DILI (age>=18)
+	PUNDOK{
+		IPAKITA: a
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: c
+	}
+KATAPUSAN

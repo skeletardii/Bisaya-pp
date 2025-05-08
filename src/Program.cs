@@ -30,7 +30,7 @@ class Program
         try
         {
             Parser parser = new Parser(tokens);
-            ASTNode ast = parser.Parse();
+            ASTNode ast = parser.ParseProgram();
 
             Console.WriteLine("✅ Parsing successful!");
             Console.WriteLine($"Root node type: {ast.GetType().Name}");
