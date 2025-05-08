@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Linq;
@@ -16,16 +17,11 @@ The AST simplifies execution and optimization.
 
 namespace Bisaya__.src.Core
 {
-    // Base class for all AST nodes
     internal abstract class ASTNode
     {
         public ASTNode? Parent { get; set; }
     }
-
-    // Base for all literal-related nodes
     internal abstract class LiteralNodeBase : ASTNode { }
-
-    // Generic base class for literal nodes that hold a typed value
     internal abstract class LiteralNode<T> : LiteralNodeBase
     {
         public abstract T Value { get; set; }
@@ -37,18 +33,26 @@ namespace Bisaya__.src.Core
         protected LiteralNode(T val)
         {
             if (val == null) throw new ArgumentNullException("Argument is null.");
-            Value = val;
+            Value = (T)val;
         }
     }
-
-    // Numeric node base
+    internal abstract class VariableNode : LiteralNodeBase
+    {
+        public string VariableName { get; }
+        protected VariableNode(Token token)
+        {
+            if (token.Type != TokenType.Identifier)
+                throw new ArgumentException($"Expected an identifier token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
+        }
+    }
+    // Base for number nodes
     internal abstract class NumberNode<T> : LiteralNode<T>
     {
         public abstract override T Value { get; set; }
         protected NumberNode(Token token) : base(token)
         {
             if (token.Type != TokenType.NumberLiteral)
-                throw new ArgumentException($"Expected a NumberLiteral token value at line {token.LineNumber}, column {token.ColumnNumber}.");
+                throw new ArgumentException($"Expected an NumberLiteral token with value. At Line {token.LineNumber} Column {token.ColumnNumber}");
         }
         public NumberNode(T val) : base(val) { Value = val; }
     }
@@ -73,7 +77,7 @@ namespace Bisaya__.src.Core
         public CharNode(Token token) : base(token)
         {
             if (token.Type != TokenType.CharLiteral || token.Value == null)
-                throw new ArgumentException($"Expected a CharLiteral token with value at line {token.LineNumber}, column {token.ColumnNumber}.");
+                throw new ArgumentException($"Expected a CharLiteral token with value. Token:{token.Type}{token.Value}");
             Value = token.Value[0];
         }
         public CharNode(char value) : base(value) { Value = value; }
@@ -85,8 +89,10 @@ namespace Bisaya__.src.Core
         public BoolNode(Token token) : base(token)
         {
             if (token.Type != TokenType.BooleanLiteral || token.Value == null)
-                throw new ArgumentException($"Expected a BooleanLiteral token with value at line {token.LineNumber}, column {token.ColumnNumber}.");
-            Value = token.Value.ToUpper() == "OO";
+                throw new ArgumentException($"Expected a BooleanLiteral token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
+            if (token.Value == "OO")
+                Value = true;
+            Value = false;
         }
         public BoolNode(bool value) : base(value) { Value = value; }
     }
@@ -96,14 +102,14 @@ namespace Bisaya__.src.Core
         public override string Value { get; set; }
         public StringNode(Token token) : base(token)
         {
-            if (token.Value == null)
-                throw new ArgumentException($"Expected a token with a value at line {token.LineNumber}, column {token.ColumnNumber}.");
+            if (token.Type != TokenType.StringLiteral || token.Value == null)
+                throw new ArgumentException($"Expected a StringLiteral token with a value. Line {token.LineNumber} Col {token.ColumnNumber}");
             Value = token.Value;
         }
         public StringNode(string value) : base(value) { Value = value; }
     }
 
-    // Node representing binary operations (e.g., +, -, *, /)
+    // Binary operation
     internal class BinaryOpNode : LiteralNodeBase
     {
         public LiteralNodeBase Left { get; }
@@ -124,23 +130,24 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Node representing variable assignments
+    // Assignment
     internal class AssignmentNode : LiteralNodeBase
     {
         public string VariableName { get; }
         public LiteralNodeBase Value { get; set; }
 
+
         public AssignmentNode(string name, LiteralNodeBase value)
         {
             if (value == null)
-                throw new ArgumentException("Expected a token with a valid value.");
+                throw new ArgumentException($"Expected an token with a valid value. Var {name} : {value}");
             Value = value;
             VariableName = name;
             Value.Parent = this;
         }
     }
 
-    // Represents a block of multiple statements
+    // Block (list of statements)
     internal class BlockNode : ASTNode
     {
         public List<ASTNode> Statements { get; }
@@ -153,7 +160,18 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Node for KUNG conditions (if-else logic)
+    internal class DeclarationNode : ASTNode
+    {
+        public string VariableName { get; }
+        public Type Type { get; }
+        public DeclarationNode(string name, Type type)
+        {
+            VariableName = name;
+            Type = type;
+        }
+
+    }
+    // If statement
     internal class IfNode : ASTNode
     {
         public LiteralNodeBase Condition { get; }
@@ -173,7 +191,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Node representing a loop (ALANG SA)
+    // While loop
     internal class WhileNode : ASTNode
     {
         public LiteralNodeBase Condition { get; }
@@ -189,7 +207,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Represents built-in function calls like IPAKITA, DAWAT
+    // Function call
     internal class FunctionCallNode : ASTNode
     {
         public string FunctionName { get; }
@@ -198,7 +216,7 @@ namespace Bisaya__.src.Core
         public FunctionCallNode(Token nameToken, List<ASTNode> arguments)
         {
             if (nameToken.Type != TokenType.Keyword || nameToken.Value == null)
-                throw new ArgumentException($"Expected a Keyword token with a value at line {nameToken.LineNumber}, column {nameToken.ColumnNumber}.");
+                throw new ArgumentException($"Expected an Identifier token with a value. Line {nameToken.LineNumber} Col {nameToken.ColumnNumber}");
             FunctionName = nameToken.Value;
             Arguments = arguments;
 
@@ -207,7 +225,7 @@ namespace Bisaya__.src.Core
         }
     }
 
-    // Function definitions (not yet used)
+    // Function definition
     internal class FunctionDefNode : ASTNode
     {
         public string Name { get; }
