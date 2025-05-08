@@ -128,6 +128,17 @@ namespace Bisaya__.src.Core
             Left.Parent = this;
             Right.Parent = this;
         }
+        public class UnaryOpNode : LiteralNodeBase
+        {
+            public Token Operator { get; }
+            public LiteralNodeBase Operand { get; }
+
+            public UnaryOpNode(Token op, LiteralNodeBase operand)
+            {
+                Operator = op;
+                Operand = operand;
+            }
+        }
     }
 
     // Assignment
@@ -179,37 +190,40 @@ namespace Bisaya__.src.Core
     {
         private LiteralNodeBase elseIfCondition;
         private ASTNode elseIfBlock;
+        private ASTNode? nextBranch;
 
         public LiteralNodeBase Condition { get; }
         public BlockNode ThenBranch { get; }
+        public ASTNode ElseBranch { get; }
 
         public IfNode(LiteralNodeBase condition, BlockNode thenBranch, BlockNode? elseBranch = null)
         {
             Condition = condition;
             ThenBranch = thenBranch;
-            BlockNode ElseBranch = elseBranch;
+            ElseBranch = elseBranch; // If no 'else', this will be null
 
-            Condition.Parent = this;
-            ThenBranch.Parent = this;
+            if(Condition != null) Condition.Parent = this;
+            if(ThenBranch != null) ThenBranch.Parent = this;
             if (ElseBranch != null)
                 ElseBranch.Parent = this;
         }
-        public IfNode(LiteralNodeBase condition, BlockNode thenBranch, IfNode elseBranch)
+
+        public IfNode(LiteralNodeBase condition, BlockNode thenBranch, IfNode elseIfNode)
         {
             Condition = condition;
             ThenBranch = thenBranch;
-            IfNode ElseBranch = elseBranch;
+            ElseBranch = elseIfNode;  // Nested 'else if' node
 
             Condition.Parent = this;
             ThenBranch.Parent = this;
             if (ElseBranch != null)
                 ElseBranch.Parent = this;
         }
-
-        public IfNode(LiteralNodeBase elseIfCondition, ASTNode elseIfBlock)
+        public IfNode(LiteralNodeBase elseIfCondition, BlockNode elseIfBlock, ASTNode? nextBranch)
         {
             this.elseIfCondition = elseIfCondition;
             this.elseIfBlock = elseIfBlock;
+            this.nextBranch = nextBranch;
         }
     }
 

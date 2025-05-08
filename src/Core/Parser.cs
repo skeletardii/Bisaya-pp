@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Bisaya__.src.Core.BinaryOpNode;
 
 namespace Bisaya__.src.Core
 {
@@ -154,56 +155,42 @@ namespace Bisaya__.src.Core
         }
         public ASTNode ParseIfStatement()
         {
-            // Parse the 'KUNG' keyword
-            Expect(TokenType.Keyword, "KUNG");
+            // Parse initial condition
+            Expect(TokenType.Keyword, "Expected 'KUNG' keyword.");
 
-            // Parse the condition (e.g., 'a > 0')
-            var condition = ParseExpression(new TokenType[] { TokenType.Keyword });
-
-            // Expect the 'PUNDOK' keyword to start the block
-            Expect(TokenType.Keyword, "PUNDOK");
-
-            // Parse the block (statements inside the 'if')
-            var block = ParseBlock();
-
-            // Check if there's an 'else if' or 'else' clause
-            if (Current.Type == TokenType.Keyword && Current.Value == "DILI")
+            // KUNG WALA (ELSE)
+            if (Current?.Value == "WALA")
             {
-                // Parse the 'DILI' keyword for 'else if'
-                Advance();
-
-                // Parse the 'KUNG' keyword for 'else if'
-                Expect(TokenType.Keyword, "KUNG");
-
-                // Parse the 'else if' condition
-                var elseIfCondition = ParseExpression(new TokenType[] { TokenType.Keyword });
-
-                // Expect 'PUNDOK' for the 'else if' block
-                Expect(TokenType.Keyword, "PUNDOK");
-
-                // Parse the 'else if' block
-                var elseIfBlock = ParseIfStatement();
-
-                // Return the 'if' node with the 'else if' block
-                return new IfNode((LiteralNodeBase)condition, block, new IfNode((LiteralNodeBase)elseIfCondition, elseIfBlock));
-            }
-
-            // Check for 'else' clause (i.e., 'WALA')
-            if (Current.Type == TokenType.Keyword && Current.Value == "WALA")
-            {
-                // Parse the 'WALA' keyword for 'else'
-                Advance();
-
-                // Parse the 'else' block
+                Advance(); // Consume WALA
+                Expect(TokenType.Keyword, "Expected 'PUNDOK' to start a code block");
                 var elseBlock = ParseBlock();
-
-                // Return the 'if' node with the 'else' block
-                return new IfNode((LiteralNodeBase)condition, block, elseBlock);
+                return new IfNode(null, null, elseBlock);
             }
 
-            return new IfNode((LiteralNodeBase)condition, block); // Return the 'if' node without the 'else if' or 'else' block
-        }
+            // KUNG DILI (ELSE IF)
+            bool isElseIf = false;
+            if (Current?.Value == "DILI")
+            {
+                isElseIf = true;
+                Advance(); // Consume DILI
+            }
 
+            Expect(TokenType.LeftParen, $"Expected '(' after 'KUNG{(isElseIf ? " DILI" : "")}'");
+            var condition = ParseExpression(new TokenType[] { TokenType.RightParen });
+            Expect(TokenType.RightParen, "Expected ')' to close condition.");
+
+            Expect(TokenType.Keyword, "Expected 'PUNDOK' to start a code block");
+            var thenBlock = ParseBlock();
+
+            // Check for next branch
+            IfNode nextBranch = null;
+            if (Current?.Type == TokenType.Keyword && Current.Value == "KUNG")
+            {
+                nextBranch = (IfNode)ParseIfStatement(); 
+            }
+
+            return new IfNode((LiteralNodeBase)condition, thenBlock, nextBranch);
+        }
 
         private ASTNode ParseWhileStatement()
         {
@@ -331,7 +318,7 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
-            var left = ParsePrimary();
+            var left = ParsePrimary(); // Start with the primary expression (could be literals, variables, etc.)
 
             while (true)
             {
@@ -339,16 +326,18 @@ namespace Bisaya__.src.Core
                     break;
 
                 var precedence = GetPrecedence(Current);
-                if (precedence == 0 || precedence <= parentPrecedence)
+                if (precedence <= parentPrecedence)
                     break;
 
                 var opToken = Advance();
-                var right = ParseBinaryOperation(precedence, stopAt);
+                var right = ParsePrimary(); // Parse the right-hand side of the binary operation
+
                 left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
             }
 
             return left;
         }
+
 
         private ASTNode ParsePrimary()
         {
@@ -363,35 +352,30 @@ namespace Bisaya__.src.Core
                     return new BoolNode(token);  // Handle boolean literals
                 case TokenType.CharLiteral:
                     return new CharNode(token);  // Handle character literals
-                case TokenType.RelationalOperator: // Handle relational operators like '>'
-                    return ParseBinaryOperation(0); // Use the ParseBinaryOperation to handle the relational operation
-
                 case TokenType.Identifier:
+                    // Handle identifier (could be a variable or function call)
                     if (Current != null && Current.Type == TokenType.LeftParen)
                     {
-                        var args = new List<ASTNode>();
-                        Advance();
-                        if (Current.Type != TokenType.RightParen)
-                        {
-                            do
-                            {
-                                args.Add(ParseExpression());
-                            } while (Match(TokenType.Comma));
-                        }
-                        Expect(TokenType.RightParen, "Expected ')' after arguments.");
-                        return new FunctionCallNode(token, args);
+                        // It's a function call, handle accordingly
+                        return ParseStatement();
                     }
-                    return ParseAssignmentOrExpression();  // Handle variable assignments or expressions
+                    // Otherwise, handle identifier as part of an expression (like variable)
+                    return new VariableNode(token);
                 case TokenType.LeftParen:
+                    // Parenthesized expressions
                     var expr = ParseExpression();
                     Expect(TokenType.RightParen, "Expected ')' after expression.");
                     return expr;
+                case TokenType.RelationalOperator:
+                    // This case shouldn't be here, binary operations should be handled by ParseBinaryOperation
+                    throw new Exception($"Unexpected token: {token.Value}");
                 case TokenType.DataType:
                     throw new Exception("Unexpected data type in expression.");
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }
         }
+
 
         private Type GetDataType(string typeName)
         {
@@ -408,14 +392,21 @@ namespace Bisaya__.src.Core
         private int GetPrecedence(Token token)
         {
             if (token == null) return 0;
+
             return token.Type switch
             {
                 TokenType.ArithmeticOperator => token.Value == "+" || token.Value == "-" ? 1 : 2,
-                TokenType.RelationalOperator => 3,  // Handle relational operators like '>', '<', etc.
-                TokenType.LogicalOperator => 4,
+                TokenType.RelationalOperator => 3,
+                TokenType.LogicalOperator => token.Value switch
+                {
+                    "UG" => 1,     // Lowest precedence (AND)
+                    "O" => 0,      // Even lower precedence (OR)
+                    _ => 0
+                },
                 _ => 0
             };
         }
+
 
         private BlockNode ParseBlock()
         {

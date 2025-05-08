@@ -76,13 +76,16 @@ class Program
 
             case AssignmentNode assign:
                 Console.WriteLine($"{indentStr}  Variable: {assign.VariableName}");
-                PrintAST(assign.Value, indent + 1);
+                if (assign.Value != null)
+                    PrintAST(assign.Value, indent + 1);
                 break;
 
             case BinaryOpNode bin:
                 Console.WriteLine($"{indentStr}  Operator: {bin.Operator}");
-                PrintAST(bin.Left, indent + 1);
-                PrintAST(bin.Right, indent + 1);
+                if (bin.Left != null)
+                    PrintAST(bin.Left, indent + 1);
+                if (bin.Right != null)
+                    PrintAST(bin.Right, indent + 1);
                 break;
 
             case FunctionCallNode func:
@@ -92,10 +95,26 @@ class Program
                 break;
 
             case IfNode ifNode:
-                Console.WriteLine($"{indentStr}  Condition:");
-                PrintAST(ifNode.Condition, indent + 1);
-                Console.WriteLine($"{indentStr}  Then:");
-                PrintAST(ifNode.ThenBranch, indent + 1);
+                if (ifNode.Condition != null)
+                {
+                    Console.WriteLine($"{indentStr}  Condition:");
+                    PrintAST(ifNode.Condition, indent + 1);
+                }
+                else
+                {
+                    Console.WriteLine($"{indentStr}  Condition: <null>");
+                }
+
+                if (ifNode.ThenBranch != null)
+                {
+                    Console.WriteLine($"{indentStr}  Then:");
+                    PrintAST(ifNode.ThenBranch, indent + 1);
+                }
+                else
+                {
+                    Console.WriteLine($"{indentStr}  Then: <null>");
+                }
+
                 if (ifNode.ElseBranch != null)
                 {
                     Console.WriteLine($"{indentStr}  Else:");
@@ -105,9 +124,16 @@ class Program
 
             case WhileNode loop:
                 Console.WriteLine($"{indentStr}  Condition:");
-                PrintAST(loop.Condition, indent + 1);
+                if (loop.Condition != null)
+                    PrintAST(loop.Condition, indent + 1);
+                else
+                    Console.WriteLine($"{indentStr}    <null>");
+
                 Console.WriteLine($"{indentStr}  Body:");
-                PrintAST(loop.Body, indent + 1);
+                if (loop.Body != null)
+                    PrintAST(loop.Body, indent + 1);
+                else
+                    Console.WriteLine($"{indentStr}    <null>");
                 break;
 
             case LiteralNodeBase literal:
@@ -117,4 +143,5 @@ class Program
                 break;
         }
     }
+
 }
