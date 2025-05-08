@@ -48,8 +48,8 @@ class Program
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Parsing failed: {ex.Message}");
-            Console.WriteLine(ex.StackTrace.ToString() );
-            Console.WriteLine("\n==============================\n"+readme+ "\n==============================");
+            Console.WriteLine(ex.StackTrace.ToString());
+            Console.WriteLine("\n==============================\n" + readme + "\n==============================");
         }
     }
 

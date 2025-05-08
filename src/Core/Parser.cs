@@ -20,11 +20,18 @@ namespace Bisaya__.src.Core
         {
             get
             {
-                if (_linePosition < _tokens.Count && _tokenPosition < _tokens[_linePosition].Count)
-                    return _tokens[_linePosition][_tokenPosition];
+                if (_linePosition < _tokens.Count)
+                {
+                    if (_tokenPosition < _tokens[_linePosition].Count)
+                    {
+                        return _tokens[_linePosition][_tokenPosition];
+                    }
+                }
+
                 return null;
             }
         }
+
 
         private Token Advance()
         {
@@ -32,16 +39,21 @@ namespace Bisaya__.src.Core
             {
                 if (_tokenPosition < _tokens[_linePosition].Count)
                 {
-                    return _tokens[_linePosition][_tokenPosition++];
+                    var token = _tokens[_linePosition][_tokenPosition++];
+                    Console.WriteLine($"Advancing to: {token.Value} ({token.Type})"); // Debugging line
+                    return token;
                 }
                 else
                 {
+                    // Debugging: Print out when we're moving to the next line
+                    Console.WriteLine($"Moving to next line: {_linePosition + 1}");
                     _linePosition++;
                     _tokenPosition = 0;
                 }
             }
             return null;
         }
+
 
         private bool Match(TokenType type)
         {
@@ -72,7 +84,6 @@ namespace Bisaya__.src.Core
         private ASTNode ParseStatement()
         {
             if (Current.Type == TokenType.Keyword && Current.Value == "SUGOD") return ParseStartBlock();
-            if (Current.Type == TokenType.Keyword && Current.Value == "KATAPUSAN") return ParseEndBlock();
             if (Current.Type == TokenType.Keyword && Current.Value == "KUNG") return ParseIfStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "SAMTANG") return ParseWhileStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "ALANG SA") return ParseForLoop();
@@ -82,6 +93,11 @@ namespace Bisaya__.src.Core
             {
                 return ParseDeclaration();
             }
+            if (Current.Type == TokenType.DataType)
+            {
+                var dataTypeToken = Advance();  // e.g., NUMERO, TINUOD, TIPIK
+                return ParseDeclarationWithDataType(dataTypeToken);
+            }
 
             return ParseAssignmentOrExpression();
         }
@@ -90,26 +106,30 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseStartBlock()
         {
+            // Expect the 'SUGOD' keyword and advance.
             Expect(TokenType.Keyword, "Expected 'SUGOD' keyword to start block.");
             Advance(); // consume 'SUGOD'
 
             var statements = new List<ASTNode>();
+
+            // Continue parsing statements until 'KATAPUSAN' is encountered.
             while (Current != null && !(Current.Type == TokenType.Keyword && Current.Value == "KATAPUSAN"))
             {
+                // This will now process the statement, checking for declarations, expressions, etc.
                 statements.Add(ParseStatement());
             }
 
-            Expect(TokenType.Keyword, "Expected 'KATAPUSAN' keyword to close the block.");
+            // At this point, we should have encountered 'KATAPUSAN' to close the block
+            if (Current == null || Current.Value != "KATAPUSAN")
+            {
+                throw new Exception("Expected 'KATAPUSAN' keyword to close the block.");
+            }
+
+            // Consume 'KATAPUSAN' token
             Advance(); // consume 'KATAPUSAN'
 
+            // Return the block node with the collected statements
             return new BlockNode(statements);
-        }
-
-        private ASTNode ParseEndBlock()
-        {
-            Expect(TokenType.Keyword, "Expected 'KATAPUSAN' keyword.");
-            Advance(); // consume 'KATAPUSAN'
-            return null;
         }
 
         private ASTNode ParseIfStatement()
@@ -161,48 +181,68 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseDeclaration()
         {
-            // Ensure 'MUGNA' keyword is found first
-            Expect(TokenType.Keyword, "Expected 'MUGNA' to declare variables.");
-            Advance(); // Consume 'MUGNA'
+            Advance(); // consume 'MUGNA'
 
-            // Debugging: Check the current token immediately after 'MUGNA'
-            Console.WriteLine($"Next Token After MUGNA: {Current?.Value}");
-
-            // Expect the data type (NUMERO, LETRA, etc.)
             if (Current?.Type != TokenType.DataType)
-            {
                 throw new Exception($"Expected data type after 'MUGNA', found: {Current?.Value}");
-            }
 
-            var dataTypeToken = Advance(); // Consume the data type (e.g., NUMERO)
-            Console.WriteLine($"Data Type: {dataTypeToken?.Value}");
-
+            var dataTypeToken = Advance(); // consume data type
             var declarations = new List<DeclarationNode>();
 
-            // Parse each variable declaration
-            do
+            while (true)
             {
-                // Expect an identifier (variable name)
                 Expect(TokenType.Identifier, "Expected variable name.");
+                var nameToken = Advance(); // consume identifier
 
-                var nameToken = Advance(); // Consume the identifier (variable name)
                 LiteralNodeBase initValue = null;
-
-                // If there's an assignment, process it
                 if (Current?.Type == TokenType.AssignmentOperator)
                 {
-                    Advance(); // Consume '='
+                    Advance(); // consume '='
                     initValue = (LiteralNodeBase)ParseExpression();
                 }
 
                 declarations.Add(new DeclarationNode(nameToken.Value, GetDataType(dataTypeToken.Value), initValue));
 
-                // Handle additional variables separated by commas
-            } while (Current?.Type == TokenType.Comma && Advance() != null);
+                // Stop if there's no comma for more declarations
+                if (Current == null || Current.Type != TokenType.Comma)
+                    break;
 
-            // Return a block node for the declaration statements
+                Advance(); // consume comma and continue
+            }
+
             return new BlockNode(declarations.Cast<ASTNode>().ToList());
         }
+
+
+        private ASTNode ParseDeclarationWithDataType(Token dataTypeToken)
+        {
+            var declarations = new List<DeclarationNode>();
+
+            while (true)
+            {
+                Expect(TokenType.Identifier, "Expected variable name after data type.");
+                var nameToken = Advance();
+
+                LiteralNodeBase initValue = null;
+
+                if (Current?.Type == TokenType.AssignmentOperator)
+                {
+                    Advance(); // consume '='
+                    initValue = (LiteralNodeBase)ParseExpression();
+                }
+
+                declarations.Add(new DeclarationNode(nameToken.Value, GetDataType(dataTypeToken.Value), initValue));
+
+                // Stop if next token is not a comma
+                if (Current?.Type != TokenType.Comma)
+                    break;
+
+                Advance(); // consume comma, continue loop
+            }
+
+            return new BlockNode(declarations.Cast<ASTNode>().ToList());
+        }
+
 
         private ASTNode ParseAssignmentOrExpression()
         {
@@ -215,54 +255,31 @@ namespace Bisaya__.src.Core
             return expr;
         }
 
-        private ASTNode ParseExpression() => ParseBinaryOperation();
+        private ASTNode ParseExpression(params TokenType[] stopAt)
+        {
+            return ParseBinaryOperation(0, stopAt);
+        }
 
-        private ASTNode ParseBinaryOperation(int parentPrecedence = 0)
+        private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
             var left = ParsePrimary();
+
             while (true)
             {
+                if (Current == null || stopAt.Contains(Current.Type))
+                    break;
+
                 var precedence = GetPrecedence(Current);
-                if (precedence == 0 || precedence <= parentPrecedence) break;
+                if (precedence == 0 || precedence <= parentPrecedence)
+                    break;
 
                 var opToken = Advance();
-                var right = ParseBinaryOperation(precedence);
+                var right = ParseBinaryOperation(precedence, stopAt);
                 left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
             }
+
             return left;
         }
-
-        private ASTNode ParseDeclarationWithDataType(Token dataTypeToken)
-        {
-            // This will handle the declaration when a data type is encountered (e.g., NUMERO, TINUOD, TIPIK)
-
-            // Start by consuming the data type token
-            var dataType = dataTypeToken.Value;
-
-            // Ensure 'MUGNA' keyword was encountered before the data type (already checked in ParseDeclaration)
-            Expect(TokenType.Keyword, "Expected 'MUGNA' keyword to declare variables.");
-            Advance();  // Consume 'MUGNA' keyword
-
-            // Expect an identifier (variable name)
-            Expect(TokenType.Identifier, "Expected variable name after data type.");
-
-            var nameToken = Advance();  // Consume identifier (variable name)
-            LiteralNodeBase initValue = null;
-
-            // If there's an assignment, process it
-            if (Current?.Type == TokenType.AssignmentOperator)
-            {
-                Advance();  // Consume '='
-                initValue = (LiteralNodeBase)ParseExpression();  // Parse expression for initial value
-            }
-
-            // Determine the appropriate .NET type based on the data type token (NUMERO, TINUOD, TIPIK)
-            var type = GetDataType(dataType);
-
-            // Return the declaration node
-            return new DeclarationNode(nameToken.Value, type, initValue);
-        }
-
 
         private ASTNode ParsePrimary()
         {

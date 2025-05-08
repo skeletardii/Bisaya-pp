@@ -1,13 +1,6 @@
+-- this is a comment
 SUGOD
-	MUGNA NUMERO a = 1, b, c
-	MUGNA LETRA as = 'x'
-	DAWAT: c
-	ALANG SA (a=1, a<=c, a++)
-	PUNDOK{
-		ALANG SA (b=1, b<=a, b++)
-		PUNDOK{
-			IPAKITA: a
-		}
-		IPAKITA: $
-	}
+	-- this is a sample program in Bisaya++
+	MUGNA NUMERO x
 KATAPUSAN
+-- this line is skipped
