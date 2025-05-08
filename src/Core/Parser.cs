@@ -20,39 +20,25 @@ namespace Bisaya__.src.Core
         {
             get
             {
-                if (_linePosition < _tokens.Count)
+                while (_linePosition < _tokens.Count)
                 {
                     if (_tokenPosition < _tokens[_linePosition].Count)
-                    {
                         return _tokens[_linePosition][_tokenPosition];
-                    }
-                }
 
-                return null;
-            }
-        }
-
-
-        private Token Advance()
-        {
-            while (_linePosition < _tokens.Count)
-            {
-                if (_tokenPosition < _tokens[_linePosition].Count)
-                {
-                    var token = _tokens[_linePosition][_tokenPosition++];
-                    Console.WriteLine($"Advancing to: {token.Value} ({token.Type})"); // Debugging line
-                    return token;
-                }
-                else
-                {
-                    // Debugging: Print out when we're moving to the next line
-                    Console.WriteLine($"Moving to next line: {_linePosition + 1}");
                     _linePosition++;
                     _tokenPosition = 0;
                 }
+                return null;
             }
-            return null;
         }
+            
+        private Token Advance()
+        {
+            var token = Current;
+            _tokenPosition++;
+            return token;
+        }
+
 
 
         private bool Match(TokenType type)
@@ -118,7 +104,6 @@ namespace Bisaya__.src.Core
                 // This will now process the statement, checking for declarations, expressions, etc.
                 statements.Add(ParseStatement());
             }
-
             // At this point, we should have encountered 'KATAPUSAN' to close the block
             if (Current == null || Current.Value != "KATAPUSAN")
             {
@@ -160,10 +145,11 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseForLoop()
         {
-            Advance(); // 'ALANG'
-            Expect(TokenType.Identifier, "Expected 'sa' keyword after 'ALANG'.");
+            Expect(TokenType.Keyword, "Expected 'sa' keyword after 'ALANG'.");
+            if (Current.Value != "sa")
+                throw new Exception("Expected 'sa' keyword after 'ALANG'.");
             Advance(); // consume 'sa'
-            Expect(TokenType.LeftParen, "Expected '(' after 'ALANG SA'.");
+
 
             var initialization = (AssignmentNode)ParseExpression();
             Expect(TokenType.Comma, "Expected ',' after initialization.");
@@ -191,27 +177,33 @@ namespace Bisaya__.src.Core
 
             while (true)
             {
-                Expect(TokenType.Identifier, "Expected variable name.");
-                var nameToken = Advance(); // consume identifier
+                if (Current?.Type != TokenType.Identifier)
+                    throw new Exception("Expected variable name.");
+
+                var nameToken = Current;
+                Advance();
 
                 LiteralNodeBase initValue = null;
                 if (Current?.Type == TokenType.AssignmentOperator)
                 {
-                    Advance(); // consume '='
+                    Advance();
                     initValue = (LiteralNodeBase)ParseExpression();
                 }
 
                 declarations.Add(new DeclarationNode(nameToken.Value, GetDataType(dataTypeToken.Value), initValue));
 
-                // Stop if there's no comma for more declarations
                 if (Current == null || Current.Type != TokenType.Comma)
                     break;
 
-                Advance(); // consume comma and continue
+                Advance(); // consume comma
             }
+
+            if (declarations.Count == 1)
+                return declarations[0];
 
             return new BlockNode(declarations.Cast<ASTNode>().ToList());
         }
+
 
 
         private ASTNode ParseDeclarationWithDataType(Token dataTypeToken)
@@ -220,8 +212,8 @@ namespace Bisaya__.src.Core
 
             while (true)
             {
+                var nameToken = Current;
                 Expect(TokenType.Identifier, "Expected variable name after data type.");
-                var nameToken = Advance();
 
                 LiteralNodeBase initValue = null;
 
