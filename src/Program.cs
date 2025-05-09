@@ -147,7 +147,7 @@ class Program
                 break;
 
             case ForLoopNode forloop:
-                Console.WriteLine($"{indentStr}- Conditions:");
+                Console.WriteLine($"{indentStr}");
                 PrintAST(forloop.declaration, indent + 2);
                 PrintAST(forloop.condition, indent + 2);
                 PrintAST(forloop.increment, indent + 2);
