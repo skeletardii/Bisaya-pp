@@ -161,6 +161,15 @@ class Program
                 var val = valueProp?.GetValue(literal)?.ToString() ?? "null";
                 Console.WriteLine($"{indentStr}  Value: {val}");
                 break;
+            case ForLoopNode forloop:
+                Console.WriteLine($"{indentStr}");
+                Console.WriteLine($"{indentStr}-Conditions:");
+                PrintAST(forloop.declaration, indent + 2);
+                PrintAST(forloop.condition, indent + 2);
+                PrintAST(forloop.increment, indent + 2);
+                PrintAST(forloop.Body, indent + 1);
+                break;
+
         }
     }
 

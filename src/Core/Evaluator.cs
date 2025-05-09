@@ -20,6 +20,8 @@ namespace Bisaya__.src.Core
 
             if (node.GetType() == typeof(IntegerNode))
                 res = (IntegerNode)node;
+            else if (node.GetType() == typeof(ForLoopNode))
+                res = handleForLoop((ForLoopNode)node);
             else if (node.GetType() == typeof(FloatNode))
                 res = (FloatNode)node;
             else if (node.GetType() == typeof(BoolNode))
@@ -123,8 +125,6 @@ namespace Bisaya__.src.Core
                 resNode = new IntegerNode((int)res);
             else if (type == typeof(bool))
                 resNode = new BoolNode((bool)res);
-
-            resNode.Parent = curr.Parent;
             return resNode;
         }
 
@@ -250,6 +250,23 @@ namespace Bisaya__.src.Core
         {
             dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Expression));
             Console.WriteLine(value);
+            return null;
+        }
+        
+        private static ASTNode handleForLoop(ForLoopNode node)
+        {
+            string varname = node.declaration.VariableName;
+            dynamic loopvar = node.declaration;
+            BinaryOpNode condition = node.condition;
+            ASTNode increment = node.increment;
+            bool loopVarExists = ( Env.Get(varname) != null );
+            Env.Set(varname, loopvar);
+            while (getLiteralValue(condition) == true)
+            {
+                //Console.WriteLine("ASS");
+                autoExec(node.Body);
+                autoExec(node.increment);
+            }
             return null;
         }
     }
