@@ -143,10 +143,9 @@ namespace Bisaya__.src.Core
             vars.Add(Advance().Value); // Consume identifier
             while (Match(TokenType.Comma))
             {
+                Console.WriteLine("Continuing DAWAT clause");
                 vars.Add(Advance().Value); // Consume identifier
             }
-
-            var identifier = Advance().Value;  
             return new InputNode(vars);
         }
         public ASTNode ParseIfStatement()
@@ -403,12 +402,21 @@ namespace Bisaya__.src.Core
                     break;
 
                 var opToken = Advance();
+                Console.WriteLine($"Operator: {opToken.Value} with precedence {precedence}");
 
                 // Handle concatenation operator & (with appropriate precedence)
                 if (opToken.Type == TokenType.Concatenator)
                 {
                     var right = ParsePrimary(); // Parse the right-hand side of the concatenation operation
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
+                }
+                if(opToken.Type == TokenType.LeftParen)
+                {
+                    Advance(); // consume '('
+                    Console.WriteLine("Consumed (");
+                    var right = ParseExpression([TokenType.RightParen]);
+                    Expect(TokenType.RightParen, "Expected ')' after expression in declaration.");
+                    left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right); // Create a binary operation node
                 }
                 else
                 {
