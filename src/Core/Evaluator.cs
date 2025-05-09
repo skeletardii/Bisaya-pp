@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Env = Bisaya__.src.Core.Environment;
@@ -28,6 +29,8 @@ namespace Bisaya__.src.Core
                 res = (BoolNode)node;
             else if (node.GetType() == typeof(CharNode))
                 res = (CharNode)node;
+            else if (node.GetType() == typeof(StringNode))
+                res = (StringNode)node;
             else if (node.GetType() == typeof(VariableNode))
                 res = handleVariable((VariableNode)node);
             else if (node.GetType() == typeof(BinaryOpNode))
@@ -116,6 +119,10 @@ namespace Bisaya__.src.Core
                 case "O":
                     res = leftval || rightval;
                     break;
+
+                case "&":
+                    res = "" + leftval + rightval;
+                    break;
             }
 
             Type type = res?.GetType();
@@ -125,7 +132,9 @@ namespace Bisaya__.src.Core
                 resNode = new IntegerNode((int)res);
             else if (type == typeof(bool))
                 resNode = new BoolNode((bool)res);
-            return resNode;
+            else
+                resNode = new StringNode((string)res);
+                return resNode;
         }
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
@@ -185,6 +194,8 @@ namespace Bisaya__.src.Core
                 return ((BoolNode)node).Value;
             if (node.GetType() == typeof(CharNode))
                 return ((CharNode)node).Value;
+            if (node.GetType() == typeof(StringNode))
+                return ((StringNode)node).Value;
             return null;
         }
 
@@ -253,7 +264,10 @@ namespace Bisaya__.src.Core
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
-            dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Expression));
+            //Console.WriteLine(node.Expression);
+            LiteralNodeBase output = (LiteralNodeBase)(autoExec(node.Expression));
+            //Console.WriteLine(output);
+            dynamic value = getLiteralValue(output);
             Console.Write(value);
             return null;
         }

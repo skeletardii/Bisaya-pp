@@ -3,6 +3,6 @@ SUGOD
 	MUGNA LETRA as = 'x'
 	ALANG SA (a=1, a<=5, a++)
 	PUNDOK{
-		IPAKITA: as
+		IPAKITA: as & a
 	}
 KATAPUSAN
