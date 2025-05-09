@@ -142,8 +142,8 @@ namespace Bisaya__.src.Core
                     if (i >= line.Length)
                         throw new InvalidExpressionException($"Unterminated string or char literal: {sb}");
 
-                    if (i < line.Length) // Skip the closing quote
-                        i++;
+                    //if (i < line.Length) // Skip the closing quote
+                    //    i++;
 
                     string tokenValue = sb.ToString();
                     if (quoteChar == '\'' && tokenValue.Length != 1)
