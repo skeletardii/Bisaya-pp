@@ -71,6 +71,13 @@ class Program
     // Recursively print AST structure
     static void PrintAST(ASTNode node, int indent)
     {
+        if (node == null)
+        {
+            string indentStrNull = new string(' ', indent * 2);
+            Console.WriteLine($"{indentStrNull}<null>");
+            return;
+        }
+
         string indentStr = new string(' ', indent * 2);
         Console.WriteLine($"{indentStr}- {node.GetType().Name}");
 
@@ -83,16 +90,13 @@ class Program
 
             case AssignmentNode assign:
                 Console.WriteLine($"{indentStr}  Variable: {assign.VariableName}");
-                if (assign.Value != null)
-                    PrintAST(assign.Value, indent + 1);
+                PrintAST(assign.Value, indent + 1);
                 break;
 
             case BinaryOpNode bin:
                 Console.WriteLine($"{indentStr}  Operator: {bin.Operator}");
-                if (bin.Left != null)
-                    PrintAST(bin.Left, indent + 1);
-                if (bin.Right != null)
-                    PrintAST(bin.Right, indent + 1);
+                PrintAST(bin.Left, indent + 1);
+                PrintAST(bin.Right, indent + 1);
                 break;
 
             case FunctionCallNode func:
@@ -102,25 +106,11 @@ class Program
                 break;
 
             case IfNode ifNode:
-                if (ifNode.Condition != null)
-                {
-                    Console.WriteLine($"{indentStr}  Condition:");
-                    PrintAST(ifNode.Condition, indent + 1);
-                }
-                else
-                {
-                    Console.WriteLine($"{indentStr}  Condition: <null>");
-                }
+                Console.WriteLine($"{indentStr}  Condition:");
+                PrintAST(ifNode.Condition, indent + 1);
 
-                if (ifNode.ThenBranch != null)
-                {
-                    Console.WriteLine($"{indentStr}  Then:");
-                    PrintAST(ifNode.ThenBranch, indent + 1);
-                }
-                else
-                {
-                    Console.WriteLine($"{indentStr}  Then: <null>");
-                }
+                Console.WriteLine($"{indentStr}  Then:");
+                PrintAST(ifNode.ThenBranch, indent + 1);
 
                 if (ifNode.ElseBranch != null)
                 {
@@ -131,16 +121,10 @@ class Program
 
             case WhileNode loop:
                 Console.WriteLine($"{indentStr}  Condition:");
-                if (loop.Condition != null)
-                    PrintAST(loop.Condition, indent + 1);
-                else
-                    Console.WriteLine($"{indentStr}    <null>");
+                PrintAST(loop.Condition, indent + 1);
 
                 Console.WriteLine($"{indentStr}  Body:");
-                if (loop.Body != null)
-                    PrintAST(loop.Body, indent + 1);
-                else
-                    Console.WriteLine($"{indentStr}    <null>");
+                PrintAST(loop.Body, indent + 1);
                 break;
 
             case DeclarationNode declaration:
@@ -161,15 +145,16 @@ class Program
                 var val = valueProp?.GetValue(literal)?.ToString() ?? "null";
                 Console.WriteLine($"{indentStr}  Value: {val}");
                 break;
+
             case ForLoopNode forloop:
-                Console.WriteLine($"{indentStr}");
-                Console.WriteLine($"{indentStr}-Conditions:");
+                Console.WriteLine($"{indentStr}- Conditions:");
                 PrintAST(forloop.declaration, indent + 2);
                 PrintAST(forloop.condition, indent + 2);
                 PrintAST(forloop.increment, indent + 2);
+
+                Console.WriteLine($"{indentStr}- Body:");
                 PrintAST(forloop.Body, indent + 1);
                 break;
-
         }
     }
 
