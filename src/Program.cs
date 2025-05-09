@@ -129,7 +129,8 @@ class Program
 
             case DeclarationNode declaration:
                 Console.WriteLine($"{indentStr}  Var: {declaration.VariableName}");
-                PrintAST(declaration.InitialValue, indent + 1);
+                if (declaration.InitialValue != null)
+                    PrintAST(declaration.InitialValue, indent + 1);
                 break;
 
             case OutputNode output:

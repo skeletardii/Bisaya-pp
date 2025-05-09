@@ -49,8 +49,8 @@ namespace Bisaya__.src.Core
             //    res = handleFunctionCall((FunctionCallNode)node);
             else if (node.GetType() == typeof(OutputNode))
                 res = handlePrint((OutputNode)node);
-            //else if (node.GetType() == typeof(PrintNode))
-            //    res = handlePrint((PrintNode)node);
+            else if (node.GetType() == typeof(InputNode))
+                res = handleInput((InputNode)node);
 
             return res;
         }
@@ -155,12 +155,17 @@ namespace Bisaya__.src.Core
             string varName = curr.VariableName;
             Type t = curr.VariableType;
             dynamic value = null;
-            value = getLiteralValue(curr.InitialValue);
-            value = Convert.ChangeType(value, t);
-            if (value.GetType() == typeof(string) && value.Length == 1)
-                value = Convert.ChangeType(value, typeof(char));
-            Env.Set(varName, value);
-            return valToLiteral(value);
+            if (curr.InitialValue != null)
+            {
+                value = getLiteralValue(curr.InitialValue);
+                value = Convert.ChangeType(value, t);
+                if (value.GetType() == typeof(string) && value.Length == 1)
+                    value = Convert.ChangeType(value, typeof(char));
+                Env.Set(varName, value);
+                return valToLiteral(value);
+            }
+            Env.Set(varName, Convert.ChangeType((byte)0,t));
+            return null;
         }
         private static ASTNode handleVariable(VariableNode node)
         {
@@ -271,7 +276,27 @@ namespace Bisaya__.src.Core
             Console.Write(value);
             return null;
         }
-        
+        private static ASTNode handleInput(InputNode node)
+        {
+            string inp = Console.ReadLine();
+            string varname = node.VariableName;
+            dynamic r = Env.Get(varname);
+            if (r == null)
+                throw new Exception($"Variable {varname} does not exist in this scope.");
+            Type t = r.GetType();
+            if (t == typeof(int))
+                r = int.Parse(inp);
+            else if (t == typeof(char))
+                r = int.Parse(inp);
+            else if (t == typeof(float))
+                r = float.Parse(inp);
+            else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
+                r = (inp == "\"OO\"");
+            else
+                throw new Exception($"Invalid Input, expected {t}");
+            Env.Set(varname, r);
+            return valToLiteral(r);
+        }
         private static ASTNode handleForLoop(ForLoopNode node)
         {
             string varname = node.declaration.VariableName;
