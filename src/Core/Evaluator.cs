@@ -302,19 +302,26 @@ namespace Bisaya__.src.Core
         }
         private static ASTNode handleForLoop(ForLoopNode node)
         {
-            string varname = node.declaration.VariableName;
-            dynamic loopvar = node.declaration;
-            BinaryOpNode condition = node.condition;
-            ASTNode increment = node.increment;
-            bool loopVarExists = ( Env.Get(varname) != null );
-            Env.Set(varname, loopvar);
-            while (getLiteralValue(condition) == true)
+            // Step 1: Initialize the loop variable correctly
+            handleAssignment(node.declaration); // This sets initial value into Env
+
+            while (true)
             {
-                //Console.WriteLine("ASS");
+                // Step 2: Evaluate condition dynamically each iteration
+                bool conditionValue = getLiteralValue((LiteralNodeBase)handle(node.condition));
+
+                if (!conditionValue)
+                    break;
+
+                // Step 3: Execute loop body
                 handle(node.Body);
-                handle(node.increment);
+
+                // Step 4: Apply increment operation (e.g., a++)
+                handleAssignment((AssignmentNode)node.increment);
             }
+
             return null;
         }
+
     }
 }
