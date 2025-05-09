@@ -284,6 +284,11 @@ namespace Bisaya__.src.Core
             Body = body;
             Body.Parent = this;
             this.Body = body;
+            Console.WriteLine("Declaration is :"+declaration.VariableName);
+
+            Console.WriteLine(condition);
+
+            Console.WriteLine(increment.Value);
         }
     }
 
