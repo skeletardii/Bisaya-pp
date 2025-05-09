@@ -30,8 +30,8 @@ class Program
         // === PARSING ===
         Console.WriteLine("\n=== Parsing ===");
         BlockNode ast = null;
-        try
-        {
+        //try
+        //{
             Parser parser = new Parser(tokens);
             ast = (BlockNode)parser.ParseProgram();
 
@@ -47,13 +47,13 @@ class Program
             // === AST TREE PRINT ===
             Console.WriteLine("\n=== AST Tree ===");
             PrintAST(ast, 0);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Parsing failed: {ex.Message}");
-            Console.WriteLine(ex.StackTrace.ToString());
-            Console.WriteLine("\n==============================\n" + readme + "\n==============================");
-        }
+        //}
+        //catch (Exception ex)
+        //{
+        //    Console.WriteLine($"❌ Parsing failed: {ex.Message}");
+        //    Console.WriteLine(ex.StackTrace.ToString());
+        //    Console.WriteLine("\n==============================\n" + readme + "\n==============================");
+        //}
 
         // === EVALUATION ===
         Console.WriteLine("\n=== Evaluating ===");

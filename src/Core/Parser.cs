@@ -391,15 +391,22 @@ namespace Bisaya__.src.Core
         private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
             var left = ParsePrimary(); // Start with the primary expression (could be literals, variables, etc.)
+            Console.WriteLine($"Left: {left.GetType().Name} with value {left}");
 
             while (true)
             {
                 if (Current == null || stopAt.Contains(Current.Type))
+                {
+                    Console.WriteLine("Exiting binary operation loop due to reaching stopAt condition");
                     break;
+                }
 
                 var precedence = GetPrecedence(Current);
                 if (precedence <= parentPrecedence)
+                {
+                    Console.WriteLine($"Exiting binary operation loop due to precedence check. self = {precedence} parent = {parentPrecedence}");
                     break;
+                }
 
                 var opToken = Advance();
                 Console.WriteLine($"Operator: {opToken.Value} with precedence {precedence}");
@@ -407,6 +414,7 @@ namespace Bisaya__.src.Core
                 // Handle concatenation operator & (with appropriate precedence)
                 if (opToken.Type == TokenType.Concatenator)
                 {
+
                     var right = ParsePrimary(); // Parse the right-hand side of the concatenation operation
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
                 }
@@ -425,7 +433,7 @@ namespace Bisaya__.src.Core
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
                 }
             }
-
+            Console.WriteLine($"Returning Left: {left.GetType().Name} with value {left}");
             return left;
         }
 
