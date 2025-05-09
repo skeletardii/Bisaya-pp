@@ -105,25 +105,20 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseStartBlock()
         {
-            // Expect the 'SUGOD' keyword and advance.
             Expect(TokenType.Keyword, "Expected 'SUGOD' keyword to start block.");
             Advance(); // consume 'SUGOD'
 
             var statements = new List<ASTNode>();
 
-            // Continue parsing statements until 'KATAPUSAN' is encountered.
             while (Current != null && !(Current.Type == TokenType.Keyword && Current.Value == "KATAPUSAN"))
             {
-                // This will now process the statement, checking for declarations, expressions, etc.
                 statements.Add(ParseStatement());
             }
-            // At this point, we should have encountered 'KATAPUSAN' to close the block
             if (Current == null || Current.Value != "KATAPUSAN")
             {
                 throw new Exception("Expected 'KATAPUSAN' keyword to close the block.");
             }
 
-            // Consume 'KATAPUSAN' token
             Advance(); // consume 'KATAPUSAN'
 
             // Return the block node with the collected statements
