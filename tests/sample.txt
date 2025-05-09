@@ -1,0 +1,5 @@
+SUGOD
+	MUGNA LETRA a = 'a', b = 'b'
+	MUGNA LETRA c = 'c'
+	IPAKITA: a & b & c
+KATAPUSAN

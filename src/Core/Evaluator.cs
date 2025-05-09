@@ -60,6 +60,8 @@ namespace Bisaya__.src.Core
             List<ASTNode> queue = block.Statements;
             foreach (ASTNode node in queue)
             {
+                if (node.GetType() == typeof(VariableNode))
+                    throw new Exception("Unexpected Token");
                 handle(node);
             }
             return null;
