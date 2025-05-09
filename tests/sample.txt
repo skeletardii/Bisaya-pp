@@ -1,8 +1,9 @@
 SUGOD
-NUMERO a = 0
-
-SAMTANG (a < 5) PUNDOK {
-  IPAKITA: a
-  a = a + 1
-}
+	MUGNA NUMERO a = 1
+	MUGNA LETRA as = 'x'
+	
+	BUHAT{
+		IPAKITA: a & $
+		a = a+1
+	} SAMTANG (a < 10) 
 KATAPUSAN

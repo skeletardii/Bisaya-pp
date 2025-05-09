@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Bisaya__.src.Core.Bisaya__.src.Core;
 using static Bisaya__.src.Core.BinaryOpNode;
 
 namespace Bisaya__.src.Core
@@ -79,6 +80,7 @@ namespace Bisaya__.src.Core
             if (Current.Type == TokenType.Keyword && Current.Value == "KUNG") return ParseIfStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "SAMTANG") return ParseWhileStatement();
             if (Current.Type == TokenType.Identifier && Current.Value == "ALANG") return ParseForLoop();
+            if (Current.Type == TokenType.Keyword && Current.Value == "BUHAT") return ParseDoWhileStatement();
             if ((Current.Type == TokenType.Keyword && Current.Value == "DAWAT")) return ParseInputStatement();
 
             if (Current.Type == TokenType.Keyword && Current.Value == "IPAKITA")
@@ -100,9 +102,6 @@ namespace Bisaya__.src.Core
             return ParseAssignmentOrExpression();
         }
 
-
-
-
         private ASTNode ParseStartBlock()
         {
             Expect(TokenType.Keyword, "Expected 'SUGOD' keyword to start block.");
@@ -121,7 +120,6 @@ namespace Bisaya__.src.Core
 
             Advance(); // consume 'KATAPUSAN'
 
-            // Return the block node with the collected statements
             return new BlockNode(statements);
         }
 
@@ -189,11 +187,24 @@ namespace Bisaya__.src.Core
         {
             Advance(); // 'Samtang'
             Expect(TokenType.LeftParen, "Expected '(' after 'SAMTANG'.");
-            var condition = ParseExpression();
+            var condition = ParseExpression(TokenType.RightParen);
             Expect(TokenType.RightParen, "Expected ')' after condition.");
             Expect(TokenType.Keyword, "Expected 'PUNDOK' before body.");
             var body = ParseBlock();
             return new WhileNode((LiteralNodeBase)condition, body);
+        }
+
+        private ASTNode ParseDoWhileStatement()
+        {
+            Advance(); // 'BUHAT'   
+            var body = ParseBlock(); // BUHAT is followed by a block in curly braces
+
+            Expect(TokenType.Keyword, "Expected 'SAMTANG' after 'BUHAT' block.");
+            Expect(TokenType.LeftParen, "Expected '(' after 'SAMTANG'.");
+            var condition = (LiteralNodeBase)ParseExpression(TokenType.RightParen);
+            Expect(TokenType.RightParen, "Expected ')' after condition.");
+
+            return new DoWhileNode(body, condition);
         }
 
         private ASTNode ParseForLoop()
@@ -217,7 +228,8 @@ namespace Bisaya__.src.Core
             var condition = (BinaryOpNode)ParseExpression(TokenType.Comma);
             Expect(TokenType.Comma, "Expected ',' after condition");
             var increment = (AssignmentNode)ParseIncrementDecrement();
-            Expect(TokenType.RightParen, "Expected ')' before body");
+            Expect(TokenType.RightParen, "Expected ')' before after condition block");
+            Expect(TokenType.Keyword, "Expected 'PUNDOK' before body");
             var body = ParseBlock();
             return new ForLoopNode(initialization, condition, increment, body);
         }

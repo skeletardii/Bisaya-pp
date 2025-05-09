@@ -239,6 +239,22 @@ namespace Bisaya__.src.Core
         }
     }
 
+    namespace Bisaya__.src.Core
+    {
+        internal class DoWhileNode : ASTNode
+        {
+            public BlockNode Body { get; }
+            public LiteralNodeBase Condition { get; }
+
+            public DoWhileNode(BlockNode body, LiteralNodeBase condition)
+            {
+                Body = body;
+                Condition = condition;
+            }
+        }
+    }
+
+
     // Function call
     internal class FunctionCallNode : ASTNode
     {
