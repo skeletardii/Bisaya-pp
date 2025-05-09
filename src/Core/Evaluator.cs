@@ -149,6 +149,7 @@ namespace Bisaya__.src.Core
         {
             string varName = curr.VariableName;
             Type t = curr.VariableType;
+            if (t == typeof(string)) t = typeof(char);
             dynamic value = null;
             if (curr.InitialValue != null)
             {
@@ -176,6 +177,8 @@ namespace Bisaya__.src.Core
                 res = new CharNode((char)value);
             else if (type == typeof(bool))
                 res = new BoolNode((bool)value);
+            else if (type == typeof(string))
+                res = new CharNode((char)value[0]);
             else
                 throw new Exception("Unsupported type.");
 
@@ -282,10 +285,12 @@ namespace Bisaya__.src.Core
             if (r == null)
                 throw new Exception($"Variable {varname} does not exist in this scope.");
             Type t = r.GetType();
+            if (t == typeof(string)) 
+                t = typeof(char);
             if (t == typeof(int))
                 r = int.Parse(inp);
-            else if (t == typeof(char))
-                r = int.Parse(inp);
+            else if (t == typeof(char) || t == typeof(string))
+                r = inp[0];
             else if (t == typeof(float))
                 r = float.Parse(inp);
             else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
