@@ -1,13 +1,6 @@
 SUGOD
-	MUGNA NUMERO a = 1, b, c
-	MUGNA LETRA as = 'x'
+	MUGNA TINUOD a = "OO", b = "DILI" , c, d
 	DAWAT: c
-	ALANG SA (a=1, a<=c, a++)
-	PUNDOK{
-		ALANG SA (b=1, b<=a, b++)
-		PUNDOK{
-			IPAKITA: a
-		}
-		IPAKITA: $
-	}
+	d = (b O c) UG a 
+	IPAKITA: d
 KATAPUSAN

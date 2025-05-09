@@ -1,20 +1,18 @@
-1:Error
+1:Error check
 SUGOD
 
-2:Error
+2:Error check
 SUGOD
 	--This will work!	
 	MUGNA TINUOD NUMERO="OO"
 KATAPUSAN
 
-3:Error
+3:Error check
 SUGOD
-	MUGNA NUMERO 1x
-KATAPUSANSUGOD
 	MUGNA NUMERO 1x
 KATAPUSAN
 
-4:OK
+4:OK check
 SUGOD
 	MUGNA sum=0
 	sum = sum + 5
@@ -22,7 +20,7 @@ SUGOD
 KATAPUSAN
 --This is ok
 
-5:OK
+5:OK check
 SUGOD
 	MUGNA NUMERO x = 5, z
 	MUGNA TINUOD numero="OO"
@@ -30,26 +28,26 @@ SUGOD
 	numero = "DILI"
 KATAPUSAN
 
-6:ERROR
+6:ERROR check
 SUGOD
 	MUGNA NUMERO x, z
 	MUGNA TINUOD NUMERO="OO"
 KATAPUSAN
 
-7:OK
+7:OK check
 SUGOD
 	MUGNA NUMERO x = -5, y
 	DAWAT: y
 	IPAKITA: x + y
 KATAPUSAN
-8:OK
+8:OK check
 SUGOD
 	MUGNA NUMERO x = 5, b = 2, z
 	x = x + b
 	DAWAT: z
 	IPAKITA: [-] & [-] & x & [&] & b & z & [-] & [-]
 KATAPUSAN
-9:OK
+9:OK check
 SUGOD
 	MUGNA LETRA l = 'a'
 	MUGNA LETRA m = 'b'
@@ -59,14 +57,14 @@ SUGOD
 	IPAKITA: l & m & n & o
 KATAPUSAN
 
-10:ERROR
+10:ERROR =======WRONG=======
 SUGOD
 	MUGNA LETRA a = 'a', b = 'b'
 	MUGNA LETRA c = 'c'
 	IPAKITA: a b c
 KATAPUSAN
 
-11:
+11: check
 SUGOD
 	MUGNA NUMERO X, y
 	DAWAT: X
@@ -74,20 +72,20 @@ SUGOD
 	IPAKITA: X + y
 KATAPUSAN
 
-12:
+12: ======WRONG=======
 SUGOD
 	MUGNA TINUOD a
 	DAWAT: a
 	IPAKITA: DILI a
 KATAPUSAN
 
-13:
+13: check
 SUGOD
 	MUGNA TINUOD a = "OO", b = "DILI", c = OO
 	DAWAT: a
 KATAPUSAN
 
-14:
+14: check
 SUGOD
 	MUGNA NUMERO a = 3, b = 4, c, d
 	DAWAT: c
@@ -95,14 +93,14 @@ SUGOD
 	IPAKITA: d
 KATAPUSAN
 
-15:
+15: wrong (pernthesis)
 SUGOD
 	MUGNA TINUOD a = "OO", b = "DILI" , c, d
 	DAWAT: c
 	d = (b O c) UG a 
 	IPAKITA: d
 KATAPUSAN
-16:
+16: check
 SUGOD
 	MUGNA NUMERO a
 	DAWAT: a
@@ -111,7 +109,7 @@ SUGOD
 		IPAKITA: a + 10
 	}
 KATAPUSAN
-17:
+17: NEED PARENTHESIS 
 SUGOD
 	MUGNA LETRA c, d = 'a'
 	DAWAT: c
@@ -124,6 +122,8 @@ SUGOD
 		IPAKITA: d
 	}
 KATAPUSAN
+
+18: WRONG
 SUGOD
 	MUGNA NUMERO age
 	MUGNA LETRA s = 's'
@@ -143,6 +143,8 @@ SUGOD
 		IPAKITA: c
 	}
 KATAPUSAN
+
+19:
 SUGOD
 	MUGNA NUMERO age
 	MUGNA LETRA s = 's'
@@ -175,6 +177,7 @@ SUGOD
 	}
 KATAPUSAN
 
+20:
 SUGOD
 	MUGNA NUMERO a = 1, b, c
 	MUGNA LETRA as = 'x'

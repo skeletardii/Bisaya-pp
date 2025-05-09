@@ -123,19 +123,16 @@ namespace Bisaya__.src.Core
             ASTNode valnode = curr.Value;
             dynamic value = null;
 
-            // Handle simulated ++ or -- (placeholder logic)
             if (valnode is VariableNode varNode && (varNode.VariableName == "++" || varNode.VariableName == "--"))
             {
                 dynamic currentVal = Env.Get(varName);
                 value = varNode.VariableName == "++" ? currentVal + 1 : currentVal - 1;
             }
-            // Handle nested assignment: x = (y = 4)
             else if (valnode is AssignmentNode nestedAssign)
             {
                 var resultNode = handleAssignment(nestedAssign);
                 value = getLiteralValue(resultNode);
             }
-            // Handle standard expression assignment
             else
             {
                 value = getLiteralValue((LiteralNodeBase)handle(valnode));
@@ -250,20 +247,6 @@ namespace Bisaya__.src.Core
             return null;
         }
 
-        // Handle Function calls (e.g., Print)
-        //private static ASTNode handOutputNode(OutputNode node)
-        //{
-        //    if (node.FunctionName == "IPAKITA")
-        //    {
-        //        foreach (var arg in node.Arguments)
-        //        {
-        //            dynamic value = getLiteralValue((LiteralNodeBase)handle(arg));
-        //            Console.Write(value);
-        //        }
-        //    }
-        //    return null;
-        //}
-
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
@@ -302,21 +285,14 @@ namespace Bisaya__.src.Core
         }
         private static ASTNode handleForLoop(ForLoopNode node)
         {
-            // Step 1: Initialize the loop variable correctly
             handleAssignment(node.declaration); // This sets initial value into Env
 
             while (true)
             {
-                // Step 2: Evaluate condition dynamically each iteration
                 bool conditionValue = getLiteralValue((LiteralNodeBase)handle(node.condition));
-
                 if (!conditionValue)
                     break;
-
-                // Step 3: Execute loop body
                 handle(node.Body);
-
-                // Step 4: Apply increment operation (e.g., a++)
                 handleAssignment((AssignmentNode)node.increment);
             }
 
