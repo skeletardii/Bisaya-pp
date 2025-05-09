@@ -13,7 +13,7 @@ class Program
         string readme = "--READ ME !!!\r\n--ang gi assign sa parser kay wala naka tiwas\r\n--lexer -> parser -> interpreter mn unta\r\n--so lexer ra maka run for now :|\r\n--pero naa ray functions ang evaluator dili lang ma test kay walay parser :| ";
         //Console.WriteLine(readme);
         // Load source code from test file
-        string content = File.ReadAllText("..\\..\\..\\tests\\testcases\\17_ok.txt");
+        string content = File.ReadAllText("..\\..\\..\\tests\\testcases\\12_ok.txt");
 
         // === LEXING ===
         Console.WriteLine("=== Lexing ===");
@@ -30,8 +30,8 @@ class Program
         // === PARSING ===
         Console.WriteLine("\n=== Parsing ===");
         BlockNode ast = null;
-        try
-        {
+        //try
+        //{
             Parser parser = new Parser(tokens);
             ast = (BlockNode)parser.ParseProgram();
 
@@ -47,13 +47,13 @@ class Program
             // === AST TREE PRINT ===
             Console.WriteLine("\n=== AST Tree ===");
             PrintAST(ast, 0);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Parsing failed: {ex.Message}");
-            Console.WriteLine(ex.StackTrace.ToString());
-            Console.WriteLine("\n==============================\n" + readme + "\n==============================");
-        }
+        //}
+        //catch (Exception ex)
+        //{
+        //    Console.WriteLine($"❌ Parsing failed: {ex.Message}");
+        //    Console.WriteLine(ex.StackTrace.ToString());
+        //    Console.WriteLine("\n==============================\n" + readme + "\n==============================");
+        //}
 
         // === EVALUATION ===
         Console.WriteLine("\n=== Evaluating ===");
@@ -141,6 +141,10 @@ class Program
                 Console.WriteLine($"{indentStr}  Var: {varnode.VariableName}");
                 break;
 
+            case UnaryOpNode unary:
+                Console.WriteLine($"{indentStr}Operand: {unary.OperatorToken.Value}");
+                PrintAST(unary.Operand, indent + 2);
+                break;
             case LiteralNodeBase literal:
                 var valueProp = literal.GetType().GetProperty("Value");
                 var val = valueProp?.GetValue(literal)?.ToString() ?? "null";

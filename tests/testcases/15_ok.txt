@@ -1,9 +1,6 @@
---15:
 SUGOD
 	MUGNA TINUOD a = "OO", b = "DILI" , c, d
 	DAWAT: c
-	d = (b O c) UG a 
+	d = ( b O c ) UG a 
 	IPAKITA: d
 KATAPUSAN
-
-

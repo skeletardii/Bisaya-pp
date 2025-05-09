@@ -36,6 +36,8 @@ namespace Bisaya__.src.Core
                 res = handleVariable((VariableNode)node);
             else if (node.GetType() == typeof(BinaryOpNode))
                 res = handleBinaryOp((BinaryOpNode)node);
+            else if (node.GetType() == typeof(UnaryOpNode))
+                res = handleUnaryOp((UnaryOpNode)node);
             else if (node.GetType() == typeof(AssignmentNode))
                 res = handleAssignment((AssignmentNode)node);
             else if (node.GetType() == typeof(BlockNode))
@@ -48,8 +50,8 @@ namespace Bisaya__.src.Core
                 res = handleDeclaration((DeclarationNode)node);
             else if (node.GetType() == typeof(OutputNode))
                 res = handlePrint((OutputNode)node);
-            //else if (node.GetType() == typeof(InputNode))
-            //    res = handleInput((InputNode)node);
+            else if (node.GetType() == typeof(InputNode))
+                res = handleInput((InputNode)node);
 
             return res;
         }
@@ -60,9 +62,28 @@ namespace Bisaya__.src.Core
             List<ASTNode> queue = block.Statements;
             foreach (ASTNode node in queue)
             {
+                if (node.GetType() == typeof(VariableNode))
+                    throw new Exception("Unexpected Token");
                 handle(node);
             }
             return null;
+        }
+        private static LiteralNodeBase handleUnaryOp(UnaryOpNode node)
+        {
+            LiteralNodeBase val = (LiteralNodeBase)handle(node.Operand);
+            dynamic value = getLiteralValue(val);
+            string op = node.OperatorToken.Value;
+            if (op == "-")
+                value = -value;
+            else if (op == "++")
+                value++;
+            else if (op == "--")
+                value--;
+            else if (op == "!")
+                value = !value;
+            else if (op == "~")
+                value = ~value;
+            return valToLiteral(value);
         }
 
         private static LiteralNodeBase handleBinaryOp(BinaryOpNode curr)
@@ -75,17 +96,20 @@ namespace Bisaya__.src.Core
             dynamic res = null;
             if (leftval.GetType() == typeof(char)) leftval = "" + leftval;
             if (rightval.GetType() == typeof(char)) rightval = "" + rightval;
-            if (leftval.GetType() == typeof(bool))
+            string op = curr.Operator;
+            if (op != "UG" && op != "O")
+            {
+                if (leftval.GetType() == typeof(bool))
                 if ((bool)leftval)
                     leftval = "OO";
                 else
                     leftval = "DILI";
-            if (rightval.GetType() == typeof(bool))
-                if ((bool)rightval)
-                    rightval = "OO";
-                else
-                    rightval = "DILI";
-            string op = curr.Operator;
+                if (rightval.GetType() == typeof(bool))
+                    if ((bool)rightval)
+                        rightval = "OO";
+                    else
+                        rightval = "DILI";
+            }
             switch (op)
             {
                 case "+": res = leftval + rightval; break;
@@ -186,6 +210,8 @@ namespace Bisaya__.src.Core
         {
             if (node.GetType() == typeof(BinaryOpNode))
                 return getLiteralValue((LiteralNodeBase)handle((BinaryOpNode)node));
+            if (node.GetType() == typeof(UnaryOpNode))
+                return getLiteralValue((LiteralNodeBase)handle((UnaryOpNode)node));
             if (node.GetType() == typeof(IntegerNode))
                 return ((IntegerNode)node).Value;
             if (node.GetType() == typeof(FloatNode))
@@ -254,9 +280,9 @@ namespace Bisaya__.src.Core
             dynamic value = getLiteralValue(output);
             if (value.GetType() == typeof(bool))
                 if ((bool)value)
-                    value = "\"OO\"";
+                    value = "OO";
                 else
-                    value = "\"DILI\"";
+                    value = "DILI";
             Console.Write(value);
             return null;
         }
@@ -293,11 +319,14 @@ namespace Bisaya__.src.Core
         }
         private static ASTNode handleForLoop(ForLoopNode node)
         {
+            // Step 1: Initialize the loop variable correctly
             handleAssignment(node.declaration); // This sets initial value into Env
 
             while (true)
             {
+                // Step 2: Evaluate condition dynamically each iteration
                 bool conditionValue = getLiteralValue((LiteralNodeBase)handle(node.condition));
+
                 if (!conditionValue)
                     break;
                 handle(node.Body);

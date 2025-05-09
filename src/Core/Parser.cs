@@ -123,7 +123,7 @@ namespace Bisaya__.src.Core
         }
 
         private ASTNode ParseOutputStatement()
-        {
+        { 
             Expect(TokenType.Keyword, "Expected 'IPAKITA'.");
             Expect(TokenType.Colon, "Expected ':' after 'IPAKITA'.");
             var expression = ParseExpression();
@@ -143,10 +143,9 @@ namespace Bisaya__.src.Core
             vars.Add(Advance().Value); // Consume identifier
             while (Match(TokenType.Comma))
             {
+                Console.WriteLine("Continuing DAWAT clause");
                 vars.Add(Advance().Value); // Consume identifier
             }
-
-            var identifier = Advance().Value;  
             return new InputNode(vars);
         }
         public ASTNode ParseIfStatement()
@@ -392,23 +391,40 @@ namespace Bisaya__.src.Core
         private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
             var left = ParsePrimary(); // Start with the primary expression (could be literals, variables, etc.)
+            Console.WriteLine($"Left: {left.GetType().Name} with value {left}");
 
             while (true)
             {
                 if (Current == null || stopAt.Contains(Current.Type))
+                {
+                    Console.WriteLine("Exiting binary operation loop due to reaching stopAt condition");
                     break;
+                }
 
                 var precedence = GetPrecedence(Current);
                 if (precedence <= parentPrecedence)
+                {
+                    Console.WriteLine($"Exiting binary operation loop due to precedence check. self = {precedence} parent = {parentPrecedence}");
                     break;
+                }
 
                 var opToken = Advance();
+                Console.WriteLine($"Operator: {opToken.Value} with precedence {precedence}");
 
                 // Handle concatenation operator & (with appropriate precedence)
                 if (opToken.Type == TokenType.Concatenator)
                 {
+
                     var right = ParsePrimary(); // Parse the right-hand side of the concatenation operation
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
+                }
+                if(opToken.Type == TokenType.LeftParen)
+                {
+                    Advance(); // consume '('
+                    Console.WriteLine("Consumed (");
+                    var right = ParseExpression([TokenType.RightParen]);
+                    Expect(TokenType.RightParen, "Expected ')' after expression in declaration.");
+                    left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right); // Create a binary operation node
                 }
                 else
                 {
@@ -417,12 +433,21 @@ namespace Bisaya__.src.Core
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
                 }
             }
-
+            Console.WriteLine($"Returning Left: {left.GetType().Name} with value {left}");
             return left;
         }
 
         private ASTNode ParsePrimary()
         {
+            // Handle unary DILI
+            if (Current?.Type == TokenType.LogicalOperator && Current.Value == "DILI")
+            {
+                var opToken = Advance(); // consume 'DILI'
+                var operand = ParsePrimary();
+
+                // You can define a UnaryOpNode or just use a BinaryOpNode with a null left
+                return new UnaryOpNode(opToken, (LiteralNodeBase)operand);
+            }
             // Handle boolean literals directly (OO and DILI are valid)
             if (Current.Value == "OO" || Current.Value == "DILI")
             {
@@ -436,16 +461,6 @@ namespace Bisaya__.src.Core
                 {
                     throw new Exception($"Invalid boolean literal: {Current.Value}. Expected 'OO' or 'DILI'.");
                 }
-            }
-
-            // Handle unary DILI
-            if (Current?.Type == TokenType.LogicalOperator && Current.Value == "DILI")
-            {
-                var opToken = Advance(); // consume 'DILI'
-                var operand = ParsePrimary();
-
-                // You can define a UnaryOpNode or just use a BinaryOpNode with a null left
-                return new UnaryOpNode(opToken, (LiteralNodeBase)operand);
             }
             // Handle unary + or -
             else if (Current?.Type == TokenType.ArithmeticOperator && (Current.Value == "-" || Current.Value == "+"))
@@ -539,7 +554,7 @@ namespace Bisaya__.src.Core
                 TokenType.LogicalOperator => token.Value switch
                 {
                     "UG" => 1,
-                    "O" => 0,
+                    "O" => 1,
                     _ => 0
                 },
                 _ => 0
