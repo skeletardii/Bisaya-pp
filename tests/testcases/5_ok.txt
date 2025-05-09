@@ -1,0 +1,7 @@
+--5:OK
+SUGOD
+	MUGNA NUMERO x = 5, z
+	MUGNA TINUOD numero="OO"
+	x=z=6
+	numero = "DILI"
+KATAPUSAN

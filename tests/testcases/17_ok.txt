@@ -1,0 +1,13 @@
+--17:
+SUGOD
+	MUGNA LETRA c, d = 'a'
+	DAWAT: c
+	KUNG (c<>'a')
+	PUNDOK{
+		IPAKITA: c
+	}
+	KUNG WALA
+	PUNDOK{
+		IPAKITA: d
+	}
+KATAPUSAN

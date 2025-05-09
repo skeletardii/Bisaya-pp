@@ -1,0 +1,7 @@
+--4:OK
+SUGOD
+	MUGNA sum=0
+	sum = sum + 5
+	MUGNA TIPIK ave = 0.00
+KATAPUSAN
+--This is ok
