@@ -305,11 +305,11 @@ namespace Bisaya__.src.Core
 
     internal class OutputNode : ASTNode
     {
-        public List<String> VariableNames { get; }
+        public ASTNode Expression { get; }
 
-        public OutputNode(List<String> varnames)
+        public OutputNode(ASTNode expression)
         {
-            VariableNames = varnames;
+            Expression = expression;
         }
     }
 }
