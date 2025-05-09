@@ -1,13 +1,6 @@
 SUGOD
-	MUGNA NUMERO a = 1, b, c
-	MUGNA LETRA as = 'x'
-	DAWAT: c
-	ALANG SA (a=1, a<=c, a++)
-	PUNDOK{
-		ALANG SA (b=1, b<=a, b++)
-		PUNDOK{
-			IPAKITA: a
-		}
-		IPAKITA: $
-	}
+	MUGNA LETRA a = 'a'
+	MUGNA LETRA b = 'b'
+	MUGNA LETRA c = 'c'
+	IPAKITA: a b c
 KATAPUSAN

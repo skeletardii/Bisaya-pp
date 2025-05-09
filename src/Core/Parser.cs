@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks.Sources;
 using Bisaya__.src.Core.Bisaya__.src.Core;
 using static Bisaya__.src.Core.BinaryOpNode;
 
@@ -37,18 +38,17 @@ namespace Bisaya__.src.Core
         private Token Advance()
         {
             var token = Current;
-            Console.WriteLine($"Advancing: {token?.Value}");
+            Console.WriteLine($"Returning: {token?.Value}");
             _tokenPosition++;
             return token;
         }
-
-
 
         private bool Match(TokenType type)
         {
             if (Current != null && Current.Type == type)
             {
                 Advance();
+                Console.WriteLine("Matched successfully");
                 return true;
             }
             return false;
@@ -72,7 +72,6 @@ namespace Bisaya__.src.Core
 
             return root;
         }
-
 
         private ASTNode ParseStatement()
         {
@@ -125,24 +124,31 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseOutputStatement()
         {
+            List<string> vars = new List<string>();
             Expect(TokenType.Keyword, "Expected 'IPAKITA'.");
             Expect(TokenType.Colon, "Expected ':' after 'IPAKITA'.");
             var expression = ParseExpression();
-            return new OutputNode(expression);
+            return new OutputNode(vars);
         }
 
 
 
         private ASTNode ParseInputStatement()
         {
+            List<string> vars = new List<string>();
             Expect(TokenType.Keyword, "Expected 'DAWAT' keyword.");
             Expect(TokenType.Colon, "Expected ':' after 'DAWAT'");
 
-            if (Current.Type != TokenType.Identifier)
+            if(Current.Type != TokenType.Identifier)
                 throw new Exception($"Expected identifier after ':'. Found {Current.Type}.");
+            vars.Add(Advance().Value); // Consume identifier
+            while (Match(TokenType.Comma))
+            {
+                vars.Add(Advance().Value); // Consume identifier
+            }
 
             var identifier = Advance().Value;  
-            return new InputNode(identifier);
+            return new InputNode(vars);
         }
         public ASTNode ParseIfStatement()
         {
@@ -168,8 +174,7 @@ namespace Bisaya__.src.Core
 
             Expect(TokenType.LeftParen, $"Expected '(' after 'KUNG{(isElseIf ? " DILI" : "")}'");
             var condition = ParseExpression(new TokenType[] { TokenType.RightParen });
-            Expect(TokenType.RightParen, "Expected ')' to close condition.");
-
+            Expect(TokenType.RightParen, "Expected ')' to close condition. instead, got"+Current.Type);
             Expect(TokenType.Keyword, "Expected 'PUNDOK' to start a code block");
             var thenBlock = ParseBlock();
 
@@ -529,6 +534,7 @@ namespace Bisaya__.src.Core
             return token.Type switch
             {
                 TokenType.ArithmeticOperator => token.Value == "+" || token.Value == "-" ? 1 : 2,
+                TokenType.AssignmentOperator => 4,
                 TokenType.RelationalOperator => 3,
                 TokenType.Concatenator => 4, // ✅ Handle & here with appropriate precedence
                 TokenType.LogicalOperator => token.Value switch
