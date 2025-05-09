@@ -1,0 +1,10 @@
+SUGOD
+	MUGNA NUMERO a = 1
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
+	PUNDOK{
+		IPAKITA: a & $
+	}
+KATAPUSAN
+

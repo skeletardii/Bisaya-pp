@@ -1,0 +1,6 @@
+--2:Error
+SUGOD
+	--This will work!	
+	MUGNA TINUOD NUMERO="OO"
+KATAPUSAN
+
