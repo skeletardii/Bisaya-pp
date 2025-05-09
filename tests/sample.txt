@@ -1,5 +1,5 @@
 SUGOD
-	MUGNA LETRA a = 'a', b = 'b'
-	MUGNA LETRA c = 'c'
-	IPAKITA: a & b & c
+	MUGNA TINUOD a = "OO", b
+	DAWAT: b
+	IPAKITA: a UG b
 KATAPUSAN

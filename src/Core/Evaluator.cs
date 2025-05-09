@@ -294,7 +294,7 @@ namespace Bisaya__.src.Core
             string[] inputs = inputLine.Split(",");
             List<string> varnames = node.VariableNames;
             while (i < node.VariableNames.Count && varnames[i] != null && i < inputs.Length && inputs[i] != null) {
-                string inp = inputs[i];
+                string inp = inputs[i].Trim();
                 string varname = node.VariableNames[i];
                 dynamic r = Env.Get(varname);
                 if (r == null)
@@ -308,8 +308,8 @@ namespace Bisaya__.src.Core
                     r = inp[0];
                 else if (t == typeof(float))
                     r = float.Parse(inp);
-                else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
-                    r = (inp == "\"OO\"");
+                else if (t == typeof(bool) && (inp == "OO" || inp == "DILI"))
+                    r = (inp == "OO");
                 else
                     throw new Exception($"Invalid Input, expected {t}");
                 Env.Set(varname, r);
