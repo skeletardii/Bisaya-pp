@@ -130,9 +130,14 @@ namespace Bisaya__.src.Core
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
         {
-            Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
+            //Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
             string varName = curr.VariableName;
-            dynamic value = getLiteralValue(curr.Value);
+            ASTNode valnode = curr.Value;
+            dynamic value = null;
+            if (valnode.GetType()==typeof(VariableNode) && (((VariableNode)valnode).VariableName == "++" || ((VariableNode)valnode).VariableName == "--"))
+                value = Env.Get(varName) + 1;
+            else
+                value = getLiteralValue(curr.Value);
             Env.Set(varName, value);
             return valToLiteral(value);
         }
@@ -249,7 +254,7 @@ namespace Bisaya__.src.Core
         private static ASTNode handlePrint(OutputNode node)
         {
             dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Expression));
-            Console.WriteLine(value);
+            Console.Write(value);
             return null;
         }
         
