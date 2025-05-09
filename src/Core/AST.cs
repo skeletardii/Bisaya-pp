@@ -191,9 +191,9 @@ namespace Bisaya__.src.Core
     // If statement
     internal class IfNode : ASTNode
     {
-        private LiteralNodeBase elseIfCondition;
-        private ASTNode elseIfBlock;
-        private ASTNode? nextBranch;
+        public LiteralNodeBase elseIfCondition;
+        public ASTNode elseIfBlock;
+        public ASTNode? nextBranch;
 
         public LiteralNodeBase Condition { get; }
         public BlockNode ThenBranch { get; }

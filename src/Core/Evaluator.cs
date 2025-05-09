@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Bisaya__.src.Core
             handleBlock(bn);
         }
 
-        private static ASTNode autoExec(ASTNode node)
+        private static ASTNode handle(ASTNode node)
         {
             ASTNode res = node;
 
@@ -45,8 +46,6 @@ namespace Bisaya__.src.Core
                 res = handleWhile((WhileNode)node);
             else if (node.GetType() == typeof(DeclarationNode))
                 res = handleDeclaration((DeclarationNode)node);
-            //else if (node.GetType() == typeof(FunctionCallNode))
-            //    res = handleFunctionCall((FunctionCallNode)node);
             else if (node.GetType() == typeof(OutputNode))
                 res = handlePrint((OutputNode)node);
             else if (node.GetType() == typeof(InputNode))
@@ -57,72 +56,42 @@ namespace Bisaya__.src.Core
 
         private static ASTNode handleBlock(BlockNode block)
         {
+            if (block == null) return null;
             List<ASTNode> queue = block.Statements;
             foreach (ASTNode node in queue)
             {
-                autoExec(node);
+                handle(node);
             }
             return null;
         }
 
         private static LiteralNodeBase handleBinaryOp(BinaryOpNode curr)
         {
-            LiteralNodeBase left = (LiteralNodeBase)autoExec(curr.Left);
-            LiteralNodeBase right = (LiteralNodeBase)autoExec(curr.Right);
+            LiteralNodeBase left = (LiteralNodeBase)handle(curr.Left);
+            LiteralNodeBase right = (LiteralNodeBase)handle(curr.Right);
             LiteralNodeBase resNode = null;
             dynamic leftval = getLiteralValue(left);
             dynamic rightval = getLiteralValue(right);
-            string op = curr.Operator;
             dynamic res = null;
-
+            if (leftval.GetType() == typeof(char)) leftval = "" + leftval;
+            if (rightval.GetType() == typeof(char)) rightval = "" + rightval;
+            string op = curr.Operator;
             switch (op)
             {
-                case "+":
-                    res = leftval + rightval;
-                    break;
-                case "-":
-                    res = leftval - rightval;
-                    break;
-                case "*":
-                    res = leftval * rightval;
-                    break;
-                case "/":
-                    res = leftval / rightval;
-                    break;
-                case "%":
-                    res = leftval % rightval;
-                    break;
-
-                case "==":
-                    res = leftval == rightval;
-                    break;
-                case "<>":
-                    res = leftval != rightval;
-                    break;
-                case ">":
-                    res = leftval > rightval;
-                    break;
-                case "<":
-                    res = leftval < rightval;
-                    break;
-                case ">=":
-                    res = leftval >= rightval;
-                    break;
-                case "<=":
-                    res = leftval <= rightval;
-                    break;
-
-
-                case "UG":
-                    res = leftval && rightval;
-                    break;
-                case "O":
-                    res = leftval || rightval;
-                    break;
-
-                case "&":
-                    res = "" + leftval + rightval;
-                    break;
+                case "+": res = leftval + rightval; break;
+                case "-": res = leftval - rightval; break;
+                case "*": res = leftval * rightval; break;
+                case "/": res = leftval / rightval; break;
+                case "%": res = leftval % rightval; break;
+                case "==": res = leftval == rightval; break;
+                case "<>": res = leftval != rightval; break;
+                case ">": res = leftval > rightval; break;
+                case "<": res = leftval < rightval; break;
+                case ">=": res = leftval >= rightval; break;
+                case "<=": res = leftval <= rightval; break;
+                case "UG": res = leftval && rightval; break;
+                case "O": res = leftval || rightval; break;
+                case "&": res = "" + leftval + rightval; break;
             }
 
             Type type = res?.GetType();
@@ -132,9 +101,10 @@ namespace Bisaya__.src.Core
                 resNode = new IntegerNode((int)res);
             else if (type == typeof(bool))
                 resNode = new BoolNode((bool)res);
-            else
+            else if (type == typeof(string))
                 resNode = new StringNode((string)res);
                 return resNode;
+            throw new Exception($"Unsupported type: {type} for operator {op}.");
         }
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
@@ -190,7 +160,7 @@ namespace Bisaya__.src.Core
         private static dynamic getLiteralValue(LiteralNodeBase node)
         {
             if (node.GetType() == typeof(BinaryOpNode))
-                return getLiteralValue((LiteralNodeBase)autoExec((BinaryOpNode)node));
+                return getLiteralValue((LiteralNodeBase)handle((BinaryOpNode)node));
             if (node.GetType() == typeof(IntegerNode))
                 return ((IntegerNode)node).Value;
             if (node.GetType() == typeof(FloatNode))
@@ -226,16 +196,11 @@ namespace Bisaya__.src.Core
         // Handle If statement
         private static ASTNode handleIf(IfNode node)
         {
-            dynamic conditionValue = getLiteralValue(node.Condition);
-            if (conditionValue)
-            {
-                autoExec(node.ThenBranch);
-            }
-            else
-            {
-                if (node.ElseBranch != null)
-                    autoExec(node.ElseBranch);
-            }
+            bool condition = (bool)(getLiteralValue(node.Condition));
+            if (condition)
+                return handle(node.ThenBranch);
+            else if (node.ElseBranch != null)
+                return handle(node.ElseBranch);
             return null;
         }
 
@@ -247,7 +212,7 @@ namespace Bisaya__.src.Core
                 dynamic conditionValue = getLiteralValue(node.Condition);
                 if (!conditionValue)
                     break;
-                autoExec(node.Body);
+                handle(node.Body);
             }
             return null;
         }
@@ -259,7 +224,7 @@ namespace Bisaya__.src.Core
         //    {
         //        foreach (var arg in node.Arguments)
         //        {
-        //            dynamic value = getLiteralValue((LiteralNodeBase)autoExec(arg));
+        //            dynamic value = getLiteralValue((LiteralNodeBase)handle(arg));
         //            Console.Write(value);
         //        }
         //    }
@@ -269,10 +234,13 @@ namespace Bisaya__.src.Core
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
-            //Console.WriteLine(node.Expression);
-            LiteralNodeBase output = (LiteralNodeBase)(autoExec(node.Expression));
-            //Console.WriteLine(output);
+            LiteralNodeBase output = (LiteralNodeBase)(handle(node.Expression));
             dynamic value = getLiteralValue(output);
+            if (value.GetType() == typeof(bool))
+                if ((bool)value)
+                    value = "\"OO\"";
+                else
+                    value = "\"DILI\"";
             Console.Write(value);
             return null;
         }
@@ -308,8 +276,8 @@ namespace Bisaya__.src.Core
             while (getLiteralValue(condition) == true)
             {
                 //Console.WriteLine("ASS");
-                autoExec(node.Body);
-                autoExec(node.increment);
+                handle(node.Body);
+                handle(node.increment);
             }
             return null;
         }
