@@ -191,6 +191,7 @@ namespace Bisaya__.src.Core
             Expect(TokenType.LeftParen, "Expected '(' after 'SAMTANG'.");
             var condition = ParseExpression();
             Expect(TokenType.RightParen, "Expected ')' after condition.");
+            Expect(TokenType.Keyword, "Expected 'PUNDOK' before body.");
             var body = ParseBlock();
             return new WhileNode((LiteralNodeBase)condition, body);
         }
@@ -390,53 +391,91 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParsePrimary()
         {
-            if (Current == null) throw new Exception("Unexpected end of input.");
-
-            // Handle unary minus
-            if (Current.Type == TokenType.ArithmeticOperator && Current.Value == "-")
+            // Handle boolean literals directly (OO and DILI are valid)
+            if (Current.Value == "OO" || Current.Value == "DILI")
             {
-                var minusToken = Advance(); // consume '-'
-                var primary = ParsePrimary();
-
-                if (primary is IntegerNode intNode)
+                if (Current?.Type == TokenType.BooleanLiteral)
                 {
-                    return new IntegerNode(-intNode.Value);
-                }
-                else if (primary is FloatNode floatNode)
-                {
-                    return new FloatNode(-floatNode.Value);
+                    var booleanValue = new BoolNode(Current);
+                    Advance(); // consume the boolean literal
+                    return booleanValue;
                 }
                 else
                 {
-                    throw new Exception("Unary '-' can only be applied to number literals.");
+                    throw new Exception($"Invalid boolean literal: {Current.Value}. Expected 'OO' or 'DILI'.");
+                }
+            }
+
+            // Handle unary DILI
+            if (Current?.Type == TokenType.LogicalOperator && Current.Value == "DILI")
+            {
+                var opToken = Advance(); // consume 'DILI'
+                var operand = ParsePrimary();
+
+                // You can define a UnaryOpNode or just use a BinaryOpNode with a null left
+                return new UnaryOpNode(opToken, (LiteralNodeBase)operand);
+            }
+            // Handle unary + or -
+            else if (Current?.Type == TokenType.ArithmeticOperator && (Current.Value == "-" || Current.Value == "+"))
+            {
+                var opToken = Advance(); // consume unary operator
+                var operand = ParsePrimary(); // recursively get the next primary
+
+                if (operand is IntegerNode intNode)
+                {
+                    return new IntegerNode(opToken.Value == "-" ? -intNode.Value : intNode.Value);
+                }
+                else if (operand is FloatNode floatNode)
+                {
+                    return new FloatNode(opToken.Value == "-" ? -floatNode.Value : floatNode.Value);
+                }
+                else
+                {
+                    throw new Exception($"Unary operator '{opToken.Value}' is not valid for type {operand.GetType().Name}");
                 }
             }
 
             var token = Advance();
+
             switch (token.Type)
             {
                 case TokenType.NumberLiteral:
-                    return new IntegerNode(int.Parse(token.Value));
+                    // Determine if it's an integer or float
+                    if (token.Value.Contains("."))
+                        return new FloatNode(token);
+                    else
+                        return new IntegerNode(token);
+
                 case TokenType.StringLiteral:
                     return new StringNode(token);
+
                 case TokenType.BooleanLiteral:
-                    return new BoolNode(token);
+                    // This part is now handled at the start of the method
+                    throw new Exception("Boolean literal should have been handled already.");
+
                 case TokenType.CharLiteral:
                     return new CharNode(token);
+
                 case TokenType.CarriageReturn:
                     return new StringNode("\n");
+
                 case TokenType.Identifier:
                     if (Current != null && Current.Type == TokenType.LeftParen)
-                        return ParseStatement();
+                    {
+                        return ParseStatement(); // function call
+                    }
                     return new VariableNode(token);
+
                 case TokenType.LeftParen:
                     var expr = ParseExpression();
                     Expect(TokenType.RightParen, "Expected ')' after expression.");
                     return expr;
+
                 case TokenType.Concatenator:
                     var left = ParsePrimary();
                     var right = ParsePrimary();
                     return new BinaryOpNode((LiteralNodeBase)left, token, (LiteralNodeBase)right);
+
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }

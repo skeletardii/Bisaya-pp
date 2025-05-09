@@ -132,14 +132,14 @@ namespace Bisaya__.src.Core
             Left.Parent = this;
             Right.Parent = this;
         }
-        public class UnaryOpNode : LiteralNodeBase
+        internal class UnaryOpNode : ASTNode
         {
-            public Token Operator { get; }
-            public LiteralNodeBase Operand { get; }
+            public Token OperatorToken { get; set; }
+            public ASTNode Operand { get; set; }  // The operand for the unary operation
 
-            public UnaryOpNode(Token op, LiteralNodeBase operand)
+            public UnaryOpNode(Token operatorToken, ASTNode operand)
             {
-                Operator = op;
+                OperatorToken = operatorToken;
                 Operand = operand;
             }
         }
