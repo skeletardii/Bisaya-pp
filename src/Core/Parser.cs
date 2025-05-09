@@ -555,7 +555,7 @@ namespace Bisaya__.src.Core
                 TokenType.LogicalOperator => token.Value switch
                 {
                     "UG" => 1,
-                    "O" => 0,
+                    "O" => 1,
                     _ => 0
                 },
                 _ => 0
