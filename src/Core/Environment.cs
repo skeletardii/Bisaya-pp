@@ -34,8 +34,9 @@ namespace Bisaya__.src.Core
         }
         public static bool Set(string varName, dynamic value)
         {
+            if (value == null) value = "null";
             if (Program.verbose) Console.WriteLine($"Set: {varName} = {value} ({value.GetType()})");
-            if (value == null) return false;
+            //if (value == null) return false;
             if (!variables.ContainsKey(varName))
             {
                 variables.Add(varName, value);
