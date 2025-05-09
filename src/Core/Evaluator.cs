@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Env = Bisaya__.src.Core.Environment;
@@ -20,12 +21,16 @@ namespace Bisaya__.src.Core
 
             if (node.GetType() == typeof(IntegerNode))
                 res = (IntegerNode)node;
+            else if (node.GetType() == typeof(ForLoopNode))
+                res = handleForLoop((ForLoopNode)node);
             else if (node.GetType() == typeof(FloatNode))
                 res = (FloatNode)node;
             else if (node.GetType() == typeof(BoolNode))
                 res = (BoolNode)node;
             else if (node.GetType() == typeof(CharNode))
                 res = (CharNode)node;
+            else if (node.GetType() == typeof(StringNode))
+                res = (StringNode)node;
             else if (node.GetType() == typeof(VariableNode))
                 res = handleVariable((VariableNode)node);
             else if (node.GetType() == typeof(BinaryOpNode))
@@ -44,8 +49,8 @@ namespace Bisaya__.src.Core
             //    res = handleFunctionCall((FunctionCallNode)node);
             else if (node.GetType() == typeof(OutputNode))
                 res = handlePrint((OutputNode)node);
-            //else if (node.GetType() == typeof(PrintNode))
-            //    res = handlePrint((PrintNode)node);
+            else if (node.GetType() == typeof(InputNode))
+                res = handleInput((InputNode)node);
 
             return res;
         }
@@ -114,6 +119,10 @@ namespace Bisaya__.src.Core
                 case "O":
                     res = leftval || rightval;
                     break;
+
+                case "&":
+                    res = "" + leftval + rightval;
+                    break;
             }
 
             Type type = res?.GetType();
@@ -123,16 +132,21 @@ namespace Bisaya__.src.Core
                 resNode = new IntegerNode((int)res);
             else if (type == typeof(bool))
                 resNode = new BoolNode((bool)res);
-
-            resNode.Parent = curr.Parent;
-            return resNode;
+            else
+                resNode = new StringNode((string)res);
+                return resNode;
         }
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
         {
-            Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
+            //Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
             string varName = curr.VariableName;
-            dynamic value = getLiteralValue(curr.Value);
+            ASTNode valnode = curr.Value;
+            dynamic value = null;
+            if (valnode.GetType()==typeof(VariableNode) && (((VariableNode)valnode).VariableName == "++" || ((VariableNode)valnode).VariableName == "--"))
+                value = Env.Get(varName) + 1;
+            else
+                value = getLiteralValue(curr.Value);
             Env.Set(varName, value);
             return valToLiteral(value);
         }
@@ -141,12 +155,17 @@ namespace Bisaya__.src.Core
             string varName = curr.VariableName;
             Type t = curr.VariableType;
             dynamic value = null;
-            value = getLiteralValue(curr.InitialValue);
-            value = Convert.ChangeType(value, t);
-            if (value.GetType() == typeof(string) && value.Length == 1)
-                value = Convert.ChangeType(value, typeof(char));
-            Env.Set(varName, value);
-            return valToLiteral(value);
+            if (curr.InitialValue != null)
+            {
+                value = getLiteralValue(curr.InitialValue);
+                value = Convert.ChangeType(value, t);
+                if (value.GetType() == typeof(string) && value.Length == 1)
+                    value = Convert.ChangeType(value, typeof(char));
+                Env.Set(varName, value);
+                return valToLiteral(value);
+            }
+            Env.Set(varName, Convert.ChangeType((byte)0,t));
+            return null;
         }
         private static ASTNode handleVariable(VariableNode node)
         {
@@ -180,6 +199,8 @@ namespace Bisaya__.src.Core
                 return ((BoolNode)node).Value;
             if (node.GetType() == typeof(CharNode))
                 return ((CharNode)node).Value;
+            if (node.GetType() == typeof(StringNode))
+                return ((StringNode)node).Value;
             return null;
         }
 
@@ -248,8 +269,48 @@ namespace Bisaya__.src.Core
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
-            dynamic value = getLiteralValue((LiteralNodeBase)autoExec(node.Expression));
-            Console.WriteLine(value);
+            //Console.WriteLine(node.Expression);
+            LiteralNodeBase output = (LiteralNodeBase)(autoExec(node.Expression));
+            //Console.WriteLine(output);
+            dynamic value = getLiteralValue(output);
+            Console.Write(value);
+            return null;
+        }
+        private static ASTNode handleInput(InputNode node)
+        {
+            string inp = Console.ReadLine();
+            string varname = node.VariableName;
+            dynamic r = Env.Get(varname);
+            if (r == null)
+                throw new Exception($"Variable {varname} does not exist in this scope.");
+            Type t = r.GetType();
+            if (t == typeof(int))
+                r = int.Parse(inp);
+            else if (t == typeof(char))
+                r = int.Parse(inp);
+            else if (t == typeof(float))
+                r = float.Parse(inp);
+            else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
+                r = (inp == "\"OO\"");
+            else
+                throw new Exception($"Invalid Input, expected {t}");
+            Env.Set(varname, r);
+            return valToLiteral(r);
+        }
+        private static ASTNode handleForLoop(ForLoopNode node)
+        {
+            string varname = node.declaration.VariableName;
+            dynamic loopvar = node.declaration;
+            BinaryOpNode condition = node.condition;
+            ASTNode increment = node.increment;
+            bool loopVarExists = ( Env.Get(varname) != null );
+            Env.Set(varname, loopvar);
+            while (getLiteralValue(condition) == true)
+            {
+                //Console.WriteLine("ASS");
+                autoExec(node.Body);
+                autoExec(node.increment);
+            }
             return null;
         }
     }

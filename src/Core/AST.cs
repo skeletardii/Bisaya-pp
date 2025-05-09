@@ -96,9 +96,7 @@ namespace Bisaya__.src.Core
         {
             if (token.Type != TokenType.BooleanLiteral || token.Value == null)
                 throw new ArgumentException($"Expected a BooleanLiteral token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
-            if (token.Value == "OO")
-                Value = true;
-            Value = false;
+            Value = token.Value == "OO";
         }
         public BoolNode(bool value) : base(value) { Value = value; }
     }
@@ -134,14 +132,14 @@ namespace Bisaya__.src.Core
             Left.Parent = this;
             Right.Parent = this;
         }
-        public class UnaryOpNode : LiteralNodeBase
+        internal class UnaryOpNode : ASTNode
         {
-            public Token Operator { get; }
-            public LiteralNodeBase Operand { get; }
+            public Token OperatorToken { get; set; }
+            public ASTNode Operand { get; set; }  // The operand for the unary operation
 
-            public UnaryOpNode(Token op, LiteralNodeBase operand)
+            public UnaryOpNode(Token operatorToken, ASTNode operand)
             {
-                Operator = op;
+                OperatorToken = operatorToken;
                 Operand = operand;
             }
         }
@@ -152,7 +150,6 @@ namespace Bisaya__.src.Core
     {
         public string VariableName { get; }
         public LiteralNodeBase Value { get; set; }
-
 
         public AssignmentNode(string name, LiteralNodeBase value)
         {
