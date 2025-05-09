@@ -390,43 +390,57 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParsePrimary()
         {
+            if (Current == null) throw new Exception("Unexpected end of input.");
+
+            // Handle unary minus
+            if (Current.Type == TokenType.ArithmeticOperator && Current.Value == "-")
+            {
+                var minusToken = Advance(); // consume '-'
+                var primary = ParsePrimary();
+
+                if (primary is IntegerNode intNode)
+                {
+                    return new IntegerNode(-intNode.Value);
+                }
+                else if (primary is FloatNode floatNode)
+                {
+                    return new FloatNode(-floatNode.Value);
+                }
+                else
+                {
+                    throw new Exception("Unary '-' can only be applied to number literals.");
+                }
+            }
+
             var token = Advance();
             switch (token.Type)
             {
                 case TokenType.NumberLiteral:
                     return new IntegerNode(int.Parse(token.Value));
                 case TokenType.StringLiteral:
-                    return new StringNode(token);  // Handle string literals
+                    return new StringNode(token);
                 case TokenType.BooleanLiteral:
-                    return new BoolNode(token);  // Handle boolean literals
+                    return new BoolNode(token);
                 case TokenType.CharLiteral:
-                    return new CharNode(token);  // Handle character literals
-                case TokenType.CarriageReturn: // ✅ handle `$`
+                    return new CharNode(token);
+                case TokenType.CarriageReturn:
                     return new StringNode("\n");
                 case TokenType.Identifier:
-                    // Handle identifier (could be a variable or function call)
                     if (Current != null && Current.Type == TokenType.LeftParen)
-                    {
-                        // It's a function call, handle accordingly
                         return ParseStatement();
-                    }
-                    // Otherwise, handle identifier as part of an expression (like variable)
                     return new VariableNode(token);
                 case TokenType.LeftParen:
-                    // Parenthesized expressions
                     var expr = ParseExpression();
                     Expect(TokenType.RightParen, "Expected ')' after expression.");
                     return expr;
                 case TokenType.Concatenator:
-                    // Handle the concatenation operator `&`
-                    var left = ParsePrimary();          // Parse the left side of concatenation
-                    var right = ParsePrimary();         // Parse the right side of concatenation
-                    return new BinaryOpNode((LiteralNodeBase)left, token, (LiteralNodeBase)right);  // Create a BinaryOpNode for concatenation
+                    var left = ParsePrimary();
+                    var right = ParsePrimary();
+                    return new BinaryOpNode((LiteralNodeBase)left, token, (LiteralNodeBase)right);
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }
         }
-
 
 
         private Type GetDataType(string typeName)
