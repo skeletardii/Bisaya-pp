@@ -1,0 +1,6 @@
+--7:OK
+SUGOD
+	MUGNA NUMERO x = -5, y
+	DAWAT: y
+	IPAKITA: x + y
+KATAPUSAN

@@ -45,6 +45,11 @@ namespace Bisaya__.src.Core
                 throw new ArgumentException($"Expected an identifier token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
             VariableName = token.Value;
         }
+
+        public VariableNode(String name)
+        {
+            VariableName = name;
+        }
     }
     // Base for number nodes
     internal abstract class NumberNode<T> : LiteralNode<T>
@@ -276,8 +281,14 @@ namespace Bisaya__.src.Core
             declaration.Parent = this;
             condition.Parent = this;
             increment.Parent = this;
+            Body = body;
             Body.Parent = this;
             this.Body = body;
+            Console.WriteLine("Declaration is :"+declaration.VariableName);
+
+            Console.WriteLine(condition);
+
+            Console.WriteLine(increment.Value);
         }
     }
 

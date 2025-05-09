@@ -36,6 +36,7 @@ namespace Bisaya__.src.Core
         private Token Advance()
         {
             var token = Current;
+            Console.WriteLine($"Advancing: {token?.Value}");
             _tokenPosition++;
             return token;
         }
@@ -77,7 +78,7 @@ namespace Bisaya__.src.Core
             if (Current.Type == TokenType.Keyword && Current.Value == "SUGOD") return ParseStartBlock();
             if (Current.Type == TokenType.Keyword && Current.Value == "KUNG") return ParseIfStatement();
             if (Current.Type == TokenType.Keyword && Current.Value == "SAMTANG") return ParseWhileStatement();
-            if (Current.Type == TokenType.Keyword && Current.Value == "ALANG SA") return ParseForLoop();
+            if (Current.Type == TokenType.Identifier && Current.Value == "ALANG") return ParseForLoop();
             if ((Current.Type == TokenType.Keyword && Current.Value == "DAWAT")) return ParseInputStatement();
 
             if (Current.Type == TokenType.Keyword && Current.Value == "IPAKITA")
@@ -133,13 +134,10 @@ namespace Bisaya__.src.Core
         {
             Expect(TokenType.Keyword, "Expected 'IPAKITA'.");
             Expect(TokenType.Colon, "Expected ':' after 'IPAKITA'.");
-            if(Current.Type == TokenType.Identifier)
-            {
-                return new OutputNode(new VariableNode(Advance()));
-            }
             var expression = ParseExpression();
             return new OutputNode(expression);
         }
+
 
 
         private ASTNode ParseInputStatement()
@@ -195,7 +193,7 @@ namespace Bisaya__.src.Core
         private ASTNode ParseWhileStatement()
         {
             Advance(); // 'Samtang'
-            Expect(TokenType.LeftParen, "Expected '(' after 'Samtang'.");
+            Expect(TokenType.LeftParen, "Expected '(' after 'SAMTANG'.");
             var condition = ParseExpression();
             Expect(TokenType.RightParen, "Expected ')' after condition.");
             var body = ParseBlock();
@@ -204,27 +202,74 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseForLoop()
         {
-            Expect(TokenType.Keyword, "Expected 'ALANG' keyword.");
-            if (Current.Value != "ALANG") throw new Exception("Expected 'ALANG' keyword.");
-            Advance(); // Consume 'ALANG'
+            Expect(TokenType.Identifier, "Expected 'ALANG' keyword.");
+            Expect(TokenType.Identifier, "Expected 'SA' keyword.");
+            Expect(TokenType.LeftParen, $"Expected '(' after ALANG SA at line {_linePosition} column {_tokenPosition}");
+            if (Current.Type != TokenType.Identifier)
+                throw new Exception("Expected variable assignment in initialization.");
 
-            Expect(TokenType.Keyword, "Expected 'SA' keyword.");
-            if (Current.Value != "SA") throw new Exception("Expected 'SA' keyword.");
-            Advance(); // Consume 'SA'
+            var variable = Advance();
 
-            var initialization = (AssignmentNode)ParseExpression();
-            Expect(TokenType.Comma, "Expected ',' after initialization.");
+            if (Current.Type != TokenType.AssignmentOperator)
+                throw new Exception("Expected '=' in initialization.");
 
-            var condition = (BinaryOpNode)ParseExpression();
-            Expect(TokenType.Comma, "Expected ',' after condition.");
+            Advance(); // consume '='
 
-            var increment = (AssignmentNode)ParseExpression();
+            var initValue = (LiteralNodeBase)ParseExpression(TokenType.Comma);
+            var initialization = new AssignmentNode(variable.Value, initValue);
+            Expect(TokenType.Comma, "Expected ',' after initialization");
+            var condition = (BinaryOpNode)ParseExpression(TokenType.Comma);
+            Expect(TokenType.Comma, "Expected ',' after condition");
+            var increment = (AssignmentNode)ParseIncrementDecrement();
             Expect(TokenType.RightParen, "Expected ')' after increment.");
-
+            Expect(TokenType.Keyword, "Expected 'PUNDOK' after condition block");
             var body = ParseBlock();
-
             return new ForLoopNode(initialization, condition, increment, body);
         }
+
+        private ASTNode ParseIncrementDecrement()
+        {
+            // Case: a++ or a--
+            if (Current?.Type == TokenType.Identifier)
+            {
+                var identifierToken = Advance(); // consume identifier
+
+                if (Current?.Type == TokenType.ArithmeticOperator && (Current.Value == "+" || Current.Value == "-"))
+                {
+                    var op = Advance().Value; // consume first '+/-'
+
+                    if (Current?.Type == TokenType.ArithmeticOperator && Current.Value == op)
+                    {
+                        Advance(); // consume second '+/-'
+                        var variable = new VariableNode(identifierToken);
+                        var operation = new VariableNode(op+op);
+                        return new AssignmentNode(identifierToken.Value, operation);
+                    }
+                }
+            }
+
+            // Case: ++a or --a
+            if (Current?.Type == TokenType.ArithmeticOperator && (Current.Value == "+" || Current.Value == "-"))
+            {
+                var op = Current.Value;
+                Advance(); // consume first '+/-'
+
+                if (Current?.Type == TokenType.ArithmeticOperator && Current.Value == op)
+                {
+                    Advance(); // consume second '+/-'
+
+                    if (Current?.Type == TokenType.Identifier)
+                    {
+                        var variable = new VariableNode(Advance());
+                        var operation = new VariableNode(op + op);
+                        return new AssignmentNode(operation.VariableName, variable);
+                    }
+                }
+            }
+
+            throw new Exception("Invalid increment or decrement syntax.");
+        }
+
 
 
         private ASTNode ParseDeclaration()
@@ -330,14 +375,23 @@ namespace Bisaya__.src.Core
                     break;
 
                 var opToken = Advance();
-                var right = ParsePrimary(); // Parse the right-hand side of the binary operation
 
-                left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
+                // Handle concatenation operator & (with appropriate precedence)
+                if (opToken.Type == TokenType.Concatenator)
+                {
+                    var right = ParsePrimary(); // Parse the right-hand side of the concatenation operation
+                    left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
+                }
+                else
+                {
+                    // Handle other operators (e.g., +, -, etc.)
+                    var right = ParsePrimary();
+                    left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
+                }
             }
 
             return left;
         }
-
 
         private ASTNode ParsePrimary()
         {
@@ -345,13 +399,15 @@ namespace Bisaya__.src.Core
             switch (token.Type)
             {
                 case TokenType.NumberLiteral:
-                    return new IntegerNode(token);  // Handle numbers correctly
+                    return new IntegerNode(int.Parse(token.Value));
                 case TokenType.StringLiteral:
                     return new StringNode(token);  // Handle string literals
                 case TokenType.BooleanLiteral:
                     return new BoolNode(token);  // Handle boolean literals
                 case TokenType.CharLiteral:
                     return new CharNode(token);  // Handle character literals
+                case TokenType.CarriageReturn: // ✅ handle `$`
+                    return new StringNode("\n");
                 case TokenType.Identifier:
                     // Handle identifier (could be a variable or function call)
                     if (Current != null && Current.Type == TokenType.LeftParen)
@@ -366,15 +422,16 @@ namespace Bisaya__.src.Core
                     var expr = ParseExpression();
                     Expect(TokenType.RightParen, "Expected ')' after expression.");
                     return expr;
-                case TokenType.RelationalOperator:
-                    // This case shouldn't be here, binary operations should be handled by ParseBinaryOperation
-                    throw new Exception($"Unexpected token: {token.Value}");
-                case TokenType.DataType:
-                    throw new Exception("Unexpected data type in expression.");
+                case TokenType.Concatenator:
+                    // Handle the concatenation operator `&`
+                    var left = ParsePrimary();          // Parse the left side of concatenation
+                    var right = ParsePrimary();         // Parse the right side of concatenation
+                    return new BinaryOpNode((LiteralNodeBase)left, token, (LiteralNodeBase)right);  // Create a BinaryOpNode for concatenation
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }
         }
+
 
 
         private Type GetDataType(string typeName)
@@ -397,16 +454,16 @@ namespace Bisaya__.src.Core
             {
                 TokenType.ArithmeticOperator => token.Value == "+" || token.Value == "-" ? 1 : 2,
                 TokenType.RelationalOperator => 3,
+                TokenType.Concatenator => 4, // ✅ Handle & here with appropriate precedence
                 TokenType.LogicalOperator => token.Value switch
                 {
-                    "UG" => 1,     // Lowest precedence (AND)
-                    "O" => 0,      // Even lower precedence (OR)
+                    "UG" => 1,
+                    "O" => 0,
                     _ => 0
                 },
                 _ => 0
             };
         }
-
 
         private BlockNode ParseBlock()
         {
@@ -424,7 +481,6 @@ namespace Bisaya__.src.Core
 
             // Expect '}' to close the block
             Expect(TokenType.RightCurly, "Expected '}' to end block.");
-
             return new BlockNode(statements);
         }
 

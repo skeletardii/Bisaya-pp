@@ -1,7 +1,8 @@
-
 SUGOD
-	MUGNA sum=0
-	sum = sum + 5+1+2.1
-	IPAKITA : sum
+	MUGNA NUMERO a = 1
+	MUGNA LETRA as = 'x'
+	ALANG SA (a=1, a<=5, a++)
+	PUNDOK{
+		IPAKITA: a & $
+	}
 KATAPUSAN
---This is ok
