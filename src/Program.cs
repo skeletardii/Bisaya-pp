@@ -141,6 +141,10 @@ class Program
                 Console.WriteLine($"{indentStr}  Var: {varnode.VariableName}");
                 break;
 
+            case UnaryOpNode unary:
+                Console.WriteLine($"{indentStr}Operand: {unary.OperatorToken.Value}");
+                PrintAST(unary.Operand, indent + 2);
+                break;
             case LiteralNodeBase literal:
                 var valueProp = literal.GetType().GetProperty("Value");
                 var val = valueProp?.GetValue(literal)?.ToString() ?? "null";
@@ -155,10 +159,6 @@ class Program
 
                 Console.WriteLine($"{indentStr}- Body:");
                 PrintAST(forloop.Body, indent + 1);
-                break;
-            case UnaryOpNode unary:
-                Console.WriteLine($"{indentStr}Operand: {unary.OperatorToken.Value}");
-                PrintAST(unary.Operand, indent + 2);
                 break;
         }
     }

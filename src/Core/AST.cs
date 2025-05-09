@@ -133,7 +133,7 @@ namespace Bisaya__.src.Core
             Right.Parent = this;
         }
     }
-    internal class UnaryOpNode : ASTNode
+    internal class UnaryOpNode : LiteralNodeBase
     {
         public Token OperatorToken { get; set; }
         public ASTNode Operand { get; set; }  // The operand for the unary operation
