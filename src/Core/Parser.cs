@@ -439,6 +439,15 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParsePrimary()
         {
+            // Handle unary DILI
+            if (Current?.Type == TokenType.LogicalOperator && Current.Value == "DILI")
+            {
+                var opToken = Advance(); // consume 'DILI'
+                var operand = ParsePrimary();
+
+                // You can define a UnaryOpNode or just use a BinaryOpNode with a null left
+                return new UnaryOpNode(opToken, (LiteralNodeBase)operand);
+            }
             // Handle boolean literals directly (OO and DILI are valid)
             if (Current.Value == "OO" || Current.Value == "DILI")
             {
@@ -452,16 +461,6 @@ namespace Bisaya__.src.Core
                 {
                     throw new Exception($"Invalid boolean literal: {Current.Value}. Expected 'OO' or 'DILI'.");
                 }
-            }
-
-            // Handle unary DILI
-            if (Current?.Type == TokenType.LogicalOperator && Current.Value == "DILI")
-            {
-                var opToken = Advance(); // consume 'DILI'
-                var operand = ParsePrimary();
-
-                // You can define a UnaryOpNode or just use a BinaryOpNode with a null left
-                return new UnaryOpNode(opToken, (LiteralNodeBase)operand);
             }
             // Handle unary + or -
             else if (Current?.Type == TokenType.ArithmeticOperator && (Current.Value == "-" || Current.Value == "+"))
