@@ -184,92 +184,73 @@ namespace Bisaya__.src.Core
                 // Check for symbols/operators
                 else
                 {
-                    string symbol = currentChar.ToString();
                     TokenType tokenType;
+                    string symbol = currentChar.ToString();
 
-                    // Handle two-character operators
+                    // First, check for 2-character relational operators (==, >=, <=, <>)
+                    if (i + 1 < line.Length)
+                    {
+                        string twoCharSymbol = line.Substring(i, 2);
+                        if (relationalOperators.Contains(twoCharSymbol))
+                        {
+                            lineTokens.Add(new Token(TokenType.RelationalOperator, twoCharSymbol, lineNumber, currentColumn));
+                            i++; // Skip next char
+                            continue;
+                        }
+                    }
+
+                    // Next, check for 1-character relational operators (<, >)
                     if (relationalOperators.Contains(symbol))
                     {
-                        tokenType = TokenType.RelationalOperator;
-
-                        // Check for 2-character relational operators first
-                        // Check for possible relational operators (e.g., >, <, >=, <=, ==, <>)
-                        if ("<>=".Contains(currentChar))
-                        {
-                            string twoCharSymbol = (i + 1 < line.Length) ? line.Substring(i, 2) : null;
-
-                            if (twoCharSymbol != null && relationalOperators.Contains(twoCharSymbol))
-                            {
-                                lineTokens.Add(new Token(TokenType.RelationalOperator, twoCharSymbol, lineNumber, currentColumn));
-                                i++; // Skip additional character
-                            }
-                            else if (relationalOperators.Contains(currentChar.ToString()))
-                            {
-                                lineTokens.Add(new Token(TokenType.RelationalOperator, currentChar.ToString(), lineNumber, currentColumn));
-                            }
-                            else
-                            {
-                                throw new InvalidExpressionException($"Invalid relational operator near '{currentChar}'");
-                            }
-
-                            continue;
-                        }
-
-
-                        // Check for 1-character relational operators
-                        if (relationalOperators.Contains(symbol))
-                        {
-                            lineTokens.Add(new Token(TokenType.RelationalOperator, symbol, lineNumber, currentColumn));
-                            continue;
-                        }
-
+                        lineTokens.Add(new Token(TokenType.RelationalOperator, symbol, lineNumber, currentColumn));
+                        continue;
                     }
-                    else
+
+                    // Otherwise, check for other single-character symbols
+                    switch (currentChar)
                     {
-                        switch (currentChar)
-                        {
-                            case '+':
-                            case '-':
-                            case '*':
-                            case '/':
-                            case '%':
-                                tokenType = TokenType.ArithmeticOperator;
-                                break;
-                            case ',':
-                                tokenType = TokenType.Comma;
-                                break;
-                            case '=':
-                                tokenType = TokenType.AssignmentOperator;
-                                break;
-                            case '(':
-                                tokenType = TokenType.LeftParen;
-                                break;
-                            case ')':
-                                tokenType = TokenType.RightParen;
-                                break;
-                            case '{':
-                                tokenType = TokenType.LeftCurly;
-                                break;
-                            case '}':
-                                tokenType = TokenType.RightCurly;
-                                break;
-                            case ':':
-                                tokenType = TokenType.Colon;
-                                break;
-                            case '&':
-                                tokenType = TokenType.Concatenator;
-                                break;
-                            case '$':
-                                tokenType = TokenType.CarriageReturn;
-                                break;
-                            default:
-                                throw new InvalidExpressionException($"Invalid symbol: '{currentChar}'");
-                        }
+                        case '+':
+                        case '-':
+                        case '*':
+                        case '/':
+                        case '%':
+                            tokenType = TokenType.ArithmeticOperator;
+                            break;
+                        case '=':
+                            tokenType = TokenType.AssignmentOperator;
+                            break;
+                        case '(':
+                            tokenType = TokenType.LeftParen;
+                            break;
+                        case ')':
+                            tokenType = TokenType.RightParen;
+                            break;
+                        case '{':
+                            tokenType = TokenType.LeftCurly;
+                            break;
+                        case '}':
+                            tokenType = TokenType.RightCurly;
+                            break;
+                        case ',':
+                            tokenType = TokenType.Comma;
+                            break;
+                        case ':':
+                            tokenType = TokenType.Colon;
+                            break;
+                        case '&':
+                            tokenType = TokenType.Concatenator;
+                            break;
+                        case '$':
+                            tokenType = TokenType.CarriageReturn;
+                            break;
+                        default:
+                            throw new InvalidExpressionException($"Invalid symbol: '{currentChar}'");
                     }
 
                     lineTokens.Add(new Token(tokenType, symbol, lineNumber, currentColumn));
                     continue;
                 }
+
             }
 
             return lineTokens;
