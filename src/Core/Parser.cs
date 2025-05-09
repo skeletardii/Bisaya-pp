@@ -217,8 +217,7 @@ namespace Bisaya__.src.Core
             var condition = (BinaryOpNode)ParseExpression(TokenType.Comma);
             Expect(TokenType.Comma, "Expected ',' after condition");
             var increment = (AssignmentNode)ParseIncrementDecrement();
-            Expect(TokenType.RightParen, "Expected ')' after increment.");
-            Expect(TokenType.Keyword, "Expected 'PUNDOK' after condition block");
+            Expect(TokenType.RightParen, "Expected ')' before body");
             var body = ParseBlock();
             return new ForLoopNode(initialization, condition, increment, body);
         }
@@ -356,7 +355,7 @@ namespace Bisaya__.src.Core
         {
             return ParseBinaryOperation(0, stopAt);
         }
-
+        
         private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
             var left = ParsePrimary(); // Start with the primary expression (could be literals, variables, etc.)

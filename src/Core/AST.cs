@@ -191,9 +191,8 @@ namespace Bisaya__.src.Core
     // If statement
     internal class IfNode : ASTNode
     {
-        private LiteralNodeBase elseIfCondition;
-        private ASTNode elseIfBlock;
-        private ASTNode? nextBranch;
+        public LiteralNodeBase elseIfCondition;
+        public ASTNode elseIfBlock;
 
         public LiteralNodeBase Condition { get; }
         public BlockNode ThenBranch { get; }
@@ -221,12 +220,6 @@ namespace Bisaya__.src.Core
             ThenBranch.Parent = this;
             if (ElseBranch != null)
                 ElseBranch.Parent = this;
-        }
-        public IfNode(LiteralNodeBase elseIfCondition, BlockNode elseIfBlock, ASTNode? nextBranch)
-        {
-            this.elseIfCondition = elseIfCondition;
-            this.elseIfBlock = elseIfBlock;
-            this.nextBranch = nextBranch;
         }
     }
 
