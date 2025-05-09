@@ -75,6 +75,16 @@ namespace Bisaya__.src.Core
             dynamic res = null;
             if (leftval.GetType() == typeof(char)) leftval = "" + leftval;
             if (rightval.GetType() == typeof(char)) rightval = "" + rightval;
+            if (leftval.GetType() == typeof(bool))
+                if ((bool)leftval)
+                    leftval = "OO";
+                else
+                    leftval = "DILI";
+            if (rightval.GetType() == typeof(bool))
+                if ((bool)rightval)
+                    rightval = "OO";
+                else
+                    rightval = "DILI";
             string op = curr.Operator;
             switch (op)
             {
@@ -109,17 +119,32 @@ namespace Bisaya__.src.Core
 
         private static LiteralNodeBase handleAssignment(AssignmentNode curr)
         {
-            //Console.WriteLine($"Assigning {curr.VariableName} = {curr.Value}");
             string varName = curr.VariableName;
             ASTNode valnode = curr.Value;
             dynamic value = null;
-            if (valnode.GetType()==typeof(VariableNode) && (((VariableNode)valnode).VariableName == "++" || ((VariableNode)valnode).VariableName == "--"))
-                value = Env.Get(varName) + 1;
+
+            // Handle simulated ++ or -- (placeholder logic)
+            if (valnode is VariableNode varNode && (varNode.VariableName == "++" || varNode.VariableName == "--"))
+            {
+                dynamic currentVal = Env.Get(varName);
+                value = varNode.VariableName == "++" ? currentVal + 1 : currentVal - 1;
+            }
+            // Handle nested assignment: x = (y = 4)
+            else if (valnode is AssignmentNode nestedAssign)
+            {
+                var resultNode = handleAssignment(nestedAssign);
+                value = getLiteralValue(resultNode);
+            }
+            // Handle standard expression assignment
             else
-                value = getLiteralValue(curr.Value);
+            {
+                value = getLiteralValue((LiteralNodeBase)handle(valnode));
+            }
+
             Env.Set(varName, value);
             return valToLiteral(value);
         }
+
         private static ASTNode handleDeclaration(DeclarationNode curr)
         {
             string varName = curr.VariableName;
@@ -196,6 +221,11 @@ namespace Bisaya__.src.Core
         // Handle If statement
         private static ASTNode handleIf(IfNode node)
         {
+            if (node.Condition == null)
+                if (node.ElseBranch != null)
+                    return handle(node.ElseBranch);
+                else if (node.ThenBranch != null)
+                    return handle(node.ThenBranch);
             bool condition = (bool)(getLiteralValue(node.Condition));
             if (condition)
                 return handle(node.ThenBranch);

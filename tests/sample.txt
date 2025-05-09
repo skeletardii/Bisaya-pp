@@ -1,31 +1,10 @@
-SUGOD 
-	MUGNA NUMERO age
-	MUGNA LETRA s = 's'
-	MUGNA LETRA a = 'a'
-	MUGNA LETRA c = 'c'
-	MUGNA LETRA g
-	MUGNA LETRA b = 'b'
-	MUGNA LETRA l = 'l'
-	DAWAT: age
-	DAWAT: g
-	KUNG (age>=60)
-	PUNDOK{
-		IPAKITA: s
-		KUNG((g=='F') O (g=='f'))
-		PUNDOK{
-			IPAKITA: b
-		}
-		KUNG WALA
-		PUNDOK{
-			IPAKITA: l
-		}
-	}
-	KUNG DILI (age>=18)
-	PUNDOK{
-		IPAKITA: a
-	}
-	KUNG WALA
-	PUNDOK{
-		IPAKITA: c
-	}
+-- this is a sample program in Bisaya++
+SUGOD
+MUGNA NUMERO x, y, z=5
+MUGNA LETRA a_1='n'
+MUGNA TINUOD t="OO"
+x=y=4
+a_1='c'
+-- this is a comment
+IPAKITA: x & t & z & $ & a_1 & [#] & "las"
 KATAPUSAN

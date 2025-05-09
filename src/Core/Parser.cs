@@ -354,14 +354,31 @@ namespace Bisaya__.src.Core
 
         private ASTNode ParseAssignmentOrExpression()
         {
-            var expr = ParseExpression();
-            if (expr is VariableNode variable && Match(TokenType.AssignmentOperator))
+            ASTNode left = ParseExpression();
+
+            while (Current?.Type == TokenType.AssignmentOperator)
             {
-                var value = ParseExpression();
-                return new AssignmentNode(variable.VariableName, (LiteralNodeBase)value);
+                Advance(); // consume '='
+                ASTNode right = ParseAssignmentOrExpression(); // recursively parse the right side
+
+                if (left is VariableNode leftVar && right is LiteralNodeBase rightLit)
+                {
+                    return new AssignmentNode(leftVar.VariableName, rightLit);
+                }
+                else if (left is VariableNode leftVar2 && right is AssignmentNode rightAssign)
+                {
+                    // nest assignment result
+                    return new AssignmentNode(leftVar2.VariableName, (LiteralNodeBase)rightAssign);
+                }
+                else
+                {
+                    throw new Exception("Invalid assignment structure.");
+                }
             }
-            return expr;
+
+            return left;
         }
+
 
         private ASTNode ParseExpression(params TokenType[] stopAt)
         {
