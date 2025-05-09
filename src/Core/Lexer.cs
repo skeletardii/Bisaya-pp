@@ -20,7 +20,7 @@ namespace Bisaya__.src.Core
     {
         // References to reserved words/operators
         static string[] keywords = {
-            "SUGOD", "KATAPUSAN", "KUNG", "KUNG-DILI", "PUNDOK", "ALANG SA", "IPAKITA", "DAWAT", "MUGNA"
+            "SUGOD", "KATAPUSAN", "KUNG", "KUNG-DILI", "PUNDOK", "ALANG SA", "IPAKITA", "DAWAT", "MUGNA", "SAMTANG", "GIMBUHATON", "BUHAT", "LISTA", "ISTRAK", "ADTO", "LUGAR", "SULAY", "SALO"
         };
         static string[] relationalOperators =
         {
