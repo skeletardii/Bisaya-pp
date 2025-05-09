@@ -180,7 +180,7 @@ namespace Bisaya__.src.Core
         public Type VariableType { get; }
         public LiteralNodeBase InitialValue { get; }
 
-        public DeclarationNode(string name, Type type, LiteralNodeBase initialValue = null)
+        public DeclarationNode(string name, Type type, LiteralNodeBase initialValue)
         {
             VariableName = name;
             VariableType = type;
@@ -295,21 +295,21 @@ namespace Bisaya__.src.Core
 
     internal class InputNode : ASTNode
     {
-        public string VariableName { get; }
+        public List<String> VariableNames { get; }
 
-        public InputNode(string variableName)
+        public InputNode(List<String> varnames)
         {
-            VariableName = variableName;
+            VariableNames = varnames;
         }
     }
 
     internal class OutputNode : ASTNode
     {
-        public ASTNode Expression { get; }
+        public List<String> VariableNames { get; }
 
-        public OutputNode(ASTNode expression)
+        public OutputNode(List<String> varnames)
         {
-            Expression = expression;
+            VariableNames = varnames;
         }
     }
 }
