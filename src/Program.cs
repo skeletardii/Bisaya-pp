@@ -13,7 +13,7 @@ class Program
         string readme = "--READ ME !!!\r\n--ang gi assign sa parser kay wala naka tiwas\r\n--lexer -> parser -> interpreter mn unta\r\n--so lexer ra maka run for now :|\r\n--pero naa ray functions ang evaluator dili lang ma test kay walay parser :| ";
         //Console.WriteLine(readme);
         // Load source code from test file
-        string content = File.ReadAllText("..\\..\\..\\tests\\sample.txt");
+        string content = File.ReadAllText("..\\..\\..\\tests\\testcases\\17_ok.txt");
 
         // === LEXING ===
         Console.WriteLine("=== Lexing ===");

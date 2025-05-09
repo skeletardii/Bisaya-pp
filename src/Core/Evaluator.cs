@@ -123,19 +123,16 @@ namespace Bisaya__.src.Core
             ASTNode valnode = curr.Value;
             dynamic value = null;
 
-            // Handle simulated ++ or -- (placeholder logic)
             if (valnode is VariableNode varNode && (varNode.VariableName == "++" || varNode.VariableName == "--"))
             {
                 dynamic currentVal = Env.Get(varName);
                 value = varNode.VariableName == "++" ? currentVal + 1 : currentVal - 1;
             }
-            // Handle nested assignment: x = (y = 4)
             else if (valnode is AssignmentNode nestedAssign)
             {
                 var resultNode = handleAssignment(nestedAssign);
                 value = getLiteralValue(resultNode);
             }
-            // Handle standard expression assignment
             else
             {
                 value = getLiteralValue((LiteralNodeBase)handle(valnode));
@@ -250,20 +247,6 @@ namespace Bisaya__.src.Core
             return null;
         }
 
-        // Handle Function calls (e.g., Print)
-        //private static ASTNode handOutputNode(OutputNode node)
-        //{
-        //    if (node.FunctionName == "IPAKITA")
-        //    {
-        //        foreach (var arg in node.Arguments)
-        //        {
-        //            dynamic value = getLiteralValue((LiteralNodeBase)handle(arg));
-        //            Console.Write(value);
-        //        }
-        //    }
-        //    return null;
-        //}
-
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
@@ -280,26 +263,33 @@ namespace Bisaya__.src.Core
         // Commented out for debugging purposes, fix handleInput method to receive List<String> of variable names
         private static ASTNode handleInput(InputNode node)
         {
-            string inp = Console.ReadLine();
-            string varname = node.VariableName;
-            dynamic r = Env.Get(varname);
-            if (r == null)
-                throw new Exception($"Variable {varname} does not exist in this scope.");
-            Type t = r.GetType();
-            if (t == typeof(string))
-                t = typeof(char);
-            if (t == typeof(int))
-                r = int.Parse(inp);
-            else if (t == typeof(char) || t == typeof(string))
-                r = inp[0];
-            else if (t == typeof(float))
-                r = float.Parse(inp);
-            else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
-                r = (inp == "\"OO\"");
-            else
-                throw new Exception($"Invalid Input, expected {t}");
-            Env.Set(varname, r);
-            return valToLiteral(r);
+            int i = 0;
+            string inputLine = Console.ReadLine();
+            string[] inputs = inputLine.Split(",");
+            List<string> varnames = node.VariableNames;
+            while (i < node.VariableNames.Count && varnames[i] != null && i < inputs.Length && inputs[i] != null) {
+                string inp = inputs[i];
+                string varname = node.VariableNames[i];
+                dynamic r = Env.Get(varname);
+                if (r == null)
+                    throw new Exception($"Variable {varname} does not exist in this scope.");
+                Type t = r.GetType();
+                if (t == typeof(string))
+                    t = typeof(char);
+                if (t == typeof(int))
+                    r = int.Parse(inp);
+                else if (t == typeof(char) || t == typeof(string))
+                    r = inp[0];
+                else if (t == typeof(float))
+                    r = float.Parse(inp);
+                else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
+                    r = (inp == "\"OO\"");
+                else
+                    throw new Exception($"Invalid Input, expected {t}");
+                Env.Set(varname, r);
+                i++;
+            }
+            return null;
         }
         private static ASTNode handleForLoop(ForLoopNode node)
         {
@@ -313,11 +303,7 @@ namespace Bisaya__.src.Core
 
                 if (!conditionValue)
                     break;
-
-                // Step 3: Execute loop body
                 handle(node.Body);
-
-                // Step 4: Apply increment operation (e.g., a++)
                 handleAssignment((AssignmentNode)node.increment);
             }
 

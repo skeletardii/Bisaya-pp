@@ -2,8 +2,8 @@
 SUGOD
 	MUGNA LETRA l = 'a'
 	MUGNA LETRA m = 'b'
-	MUGNA LETRA n, o;
+	MUGNA LETRA n, o
 	DAWAT: n
-	o = n;
+	o = n
 	IPAKITA: l & m & n & o
 KATAPUSAN
