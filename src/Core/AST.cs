@@ -96,9 +96,7 @@ namespace Bisaya__.src.Core
         {
             if (token.Type != TokenType.BooleanLiteral || token.Value == null)
                 throw new ArgumentException($"Expected a BooleanLiteral token with value. Line {token.LineNumber} Col {token.ColumnNumber}");
-            if (token.Value == "OO")
-                Value = true;
-            Value = false;
+            Value = token.Value == "OO";
         }
         public BoolNode(bool value) : base(value) { Value = value; }
     }
@@ -152,7 +150,6 @@ namespace Bisaya__.src.Core
     {
         public string VariableName { get; }
         public LiteralNodeBase Value { get; set; }
-
 
         public AssignmentNode(string name, LiteralNodeBase value)
         {
