@@ -132,14 +132,14 @@ namespace Bisaya__.src.Core
             Left.Parent = this;
             Right.Parent = this;
         }
-        public class UnaryOpNode : LiteralNodeBase
+        internal class UnaryOpNode : ASTNode
         {
-            public Token Operator { get; }
-            public LiteralNodeBase Operand { get; }
+            public Token OperatorToken { get; set; }
+            public ASTNode Operand { get; set; }  // The operand for the unary operation
 
-            public UnaryOpNode(Token op, LiteralNodeBase operand)
+            public UnaryOpNode(Token operatorToken, ASTNode operand)
             {
-                Operator = op;
+                OperatorToken = operatorToken;
                 Operand = operand;
             }
         }
@@ -193,7 +193,6 @@ namespace Bisaya__.src.Core
     {
         public LiteralNodeBase elseIfCondition;
         public ASTNode elseIfBlock;
-        public ASTNode? nextBranch;
 
         public LiteralNodeBase Condition { get; }
         public BlockNode ThenBranch { get; }
@@ -221,12 +220,6 @@ namespace Bisaya__.src.Core
             ThenBranch.Parent = this;
             if (ElseBranch != null)
                 ElseBranch.Parent = this;
-        }
-        public IfNode(LiteralNodeBase elseIfCondition, BlockNode elseIfBlock, ASTNode? nextBranch)
-        {
-            this.elseIfCondition = elseIfCondition;
-            this.elseIfBlock = elseIfBlock;
-            this.nextBranch = nextBranch;
         }
     }
 
