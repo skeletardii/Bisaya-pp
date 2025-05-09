@@ -123,7 +123,7 @@ namespace Bisaya__.src.Core
         }
 
         private ASTNode ParseOutputStatement()
-        {
+        { 
             Expect(TokenType.Keyword, "Expected 'IPAKITA'.");
             Expect(TokenType.Colon, "Expected ':' after 'IPAKITA'.");
             var expression = ParseExpression();

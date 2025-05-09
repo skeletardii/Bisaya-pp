@@ -310,6 +310,7 @@ namespace Bisaya__.src.Core
         public OutputNode(ASTNode expression)
         {
             Expression = expression;
+            Expression.Parent = this;
         }
     }
 }
