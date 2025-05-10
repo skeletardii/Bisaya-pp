@@ -53,6 +53,8 @@ namespace Bisaya__.src.Core
                 res = handlePrint((OutputNode)node);
             else if (node.GetType() == typeof(InputNode))
                 res = handleInput((InputNode)node);
+            else if (node.GetType() == typeof(DoWhileNode))
+                res = handleDoWhile((DoWhileNode)node);
 
             return res;
         }
@@ -348,6 +350,17 @@ namespace Bisaya__.src.Core
 
             return null;
         }
+        private static ASTNode handleDoWhile(DoWhileNode node)
+        {
+            do
+            {
+                handle(node.Body);
+            }
+            while ((bool)getLiteralValue((LiteralNodeBase)handle(node.Condition)));
+
+            return null;
+        }
+
         private static dynamic ParseAutoNumber(string input)
         {
             if (input.Contains('.'))

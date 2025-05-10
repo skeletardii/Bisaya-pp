@@ -1,7 +1,5 @@
 SUGOD
-	MUGNA NUMERO a = 0
-	BUHAT {
-		a = a + 1
-		IPAKITA: a
-	} SAMTANG ( a < 5)
+	MUGNA TINUOD ba = "OO"
+	DAWAT : ba
+	IPAKITA : DILI ba
 KATAPUSAN
