@@ -15,6 +15,7 @@ namespace Bisaya__.src.Core
         {
             handleBlock(bn);
         }
+        public static Dictionary<string, dynamic> env = Env.variables;
 
         private static ASTNode handle(ASTNode node)
         {
@@ -71,18 +72,20 @@ namespace Bisaya__.src.Core
         private static LiteralNodeBase handleUnaryOp(UnaryOpNode node)
         {
             LiteralNodeBase val = (LiteralNodeBase)handle(node.Operand);
+            //Console.WriteLine("AAAA");
             dynamic value = getLiteralValue(val);
             string op = node.OperatorToken.Value;
-            if (op == "-")
+            if (op == "DILI")
+            {
+                value = !((bool)value);
+                return valToLiteral(value);
+            }
+            else if (op == "-")
                 value = -value;
             else if (op == "++")
                 value++;
             else if (op == "--")
                 value--;
-            else if (op == "!")
-                value = !value;
-            else if (op == "~")
-                value = ~value;
             return valToLiteral(value);
         }
 
@@ -110,6 +113,10 @@ namespace Bisaya__.src.Core
                     else
                         rightval = "DILI";
             }
+            //if (leftval.GetType() == typeof(string))
+            //    leftval = ParseAutoNumber(leftval);
+            //if (rightval.GetType() == typeof(string))
+            //    rightval = ParseAutoNumber(rightval);
             switch (op)
             {
                 case "+": res = leftval + rightval; break;
@@ -126,6 +133,11 @@ namespace Bisaya__.src.Core
                 case "UG": res = leftval && rightval; break;
                 case "O": res = leftval || rightval; break;
                 case "&": res = "" + leftval + rightval; break;
+                case "=":
+                    res = rightval;
+                    if(left.GetType() == typeof(VariableNode))
+                        Env.Set(((VariableNode)left).VariableName, rightval);
+                    break;
             }
 
             Type type = res?.GetType();
@@ -208,6 +220,7 @@ namespace Bisaya__.src.Core
 
         private static dynamic getLiteralValue(LiteralNodeBase node)
         {
+            if (node == null) return null;
             if (node.GetType() == typeof(BinaryOpNode))
                 return getLiteralValue((LiteralNodeBase)handle((BinaryOpNode)node));
             if (node.GetType() == typeof(UnaryOpNode))
@@ -334,6 +347,21 @@ namespace Bisaya__.src.Core
             }
 
             return null;
+        }
+        private static dynamic ParseAutoNumber(string input)
+        {
+            if (input.Contains('.'))
+            {
+                if (float.TryParse(input, out float f))
+                    return f;
+            }
+            else
+            {
+                if (int.TryParse(input, out int i))
+                    return i;
+            }
+
+            return input;
         }
 
     }

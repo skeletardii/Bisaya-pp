@@ -551,9 +551,9 @@ namespace Bisaya__.src.Core
             return token.Type switch
             {
                 TokenType.ArithmeticOperator => token.Value == "+" || token.Value == "-" ? 1 : 2,
-                TokenType.AssignmentOperator => 4,
+                TokenType.AssignmentOperator => 0,// og:4
                 TokenType.RelationalOperator => 3,
-                TokenType.Concatenator => 4, // ✅ Handle & here with appropriate precedence
+                TokenType.Concatenator => 4, // ✅ Handle & here with appropriate precedence (og:4)
                 TokenType.LogicalOperator => token.Value switch
                 {
                     "UG" => 1,

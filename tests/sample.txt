@@ -1,3 +1,4 @@
+-- this is a sample program in Bisaya++
 SUGOD
 	MUGNA NUMERO a = 0
 	BUHAT {
