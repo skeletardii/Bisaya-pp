@@ -72,7 +72,7 @@ SUGOD
 	IPAKITA: X + y
 KATAPUSAN
 
-12: ======WRONG=======
+12: wrong
 SUGOD
 	MUGNA TINUOD a
 	DAWAT: a
@@ -93,7 +93,7 @@ SUGOD
 	IPAKITA: d
 KATAPUSAN
 
-15: wrong (pernthesis)
+15: check
 SUGOD
 	MUGNA TINUOD a = "OO", b = "DILI" , c, d
 	DAWAT: c

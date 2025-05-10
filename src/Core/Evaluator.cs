@@ -36,6 +36,8 @@ namespace Bisaya__.src.Core
                 res = handleVariable((VariableNode)node);
             else if (node.GetType() == typeof(BinaryOpNode))
                 res = handleBinaryOp((BinaryOpNode)node);
+            else if (node.GetType() == typeof(UnaryOpNode))
+                res = handleUnaryOp((UnaryOpNode)node);
             else if (node.GetType() == typeof(AssignmentNode))
                 res = handleAssignment((AssignmentNode)node);
             else if (node.GetType() == typeof(BlockNode))
@@ -66,6 +68,23 @@ namespace Bisaya__.src.Core
             }
             return null;
         }
+        private static LiteralNodeBase handleUnaryOp(UnaryOpNode node)
+        {
+            LiteralNodeBase val = (LiteralNodeBase)handle(node.Operand);
+            dynamic value = getLiteralValue(val);
+            string op = node.OperatorToken.Value;
+            if (op == "-")
+                value = -value;
+            else if (op == "++")
+                value++;
+            else if (op == "--")
+                value--;
+            else if (op == "!")
+                value = !value;
+            else if (op == "~")
+                value = ~value;
+            return valToLiteral(value);
+        }
 
         private static LiteralNodeBase handleBinaryOp(BinaryOpNode curr)
         {
@@ -77,17 +96,20 @@ namespace Bisaya__.src.Core
             dynamic res = null;
             if (leftval.GetType() == typeof(char)) leftval = "" + leftval;
             if (rightval.GetType() == typeof(char)) rightval = "" + rightval;
-            if (leftval.GetType() == typeof(bool))
+            string op = curr.Operator;
+            if (op != "UG" && op != "O")
+            {
+                if (leftval.GetType() == typeof(bool))
                 if ((bool)leftval)
                     leftval = "OO";
                 else
                     leftval = "DILI";
-            if (rightval.GetType() == typeof(bool))
-                if ((bool)rightval)
-                    rightval = "OO";
-                else
-                    rightval = "DILI";
-            string op = curr.Operator;
+                if (rightval.GetType() == typeof(bool))
+                    if ((bool)rightval)
+                        rightval = "OO";
+                    else
+                        rightval = "DILI";
+            }
             switch (op)
             {
                 case "+": res = leftval + rightval; break;
@@ -188,6 +210,8 @@ namespace Bisaya__.src.Core
         {
             if (node.GetType() == typeof(BinaryOpNode))
                 return getLiteralValue((LiteralNodeBase)handle((BinaryOpNode)node));
+            if (node.GetType() == typeof(UnaryOpNode))
+                return getLiteralValue((LiteralNodeBase)handle((UnaryOpNode)node));
             if (node.GetType() == typeof(IntegerNode))
                 return ((IntegerNode)node).Value;
             if (node.GetType() == typeof(FloatNode))
@@ -256,9 +280,9 @@ namespace Bisaya__.src.Core
             dynamic value = getLiteralValue(output);
             if (value.GetType() == typeof(bool))
                 if ((bool)value)
-                    value = "\"OO\"";
+                    value = "OO";
                 else
-                    value = "\"DILI\"";
+                    value = "DILI";
             Console.Write(value);
             return null;
         }
@@ -270,7 +294,7 @@ namespace Bisaya__.src.Core
             string[] inputs = inputLine.Split(",");
             List<string> varnames = node.VariableNames;
             while (i < node.VariableNames.Count && varnames[i] != null && i < inputs.Length && inputs[i] != null) {
-                string inp = inputs[i];
+                string inp = inputs[i].Trim();
                 string varname = node.VariableNames[i];
                 dynamic r = Env.Get(varname);
                 if (r == null)
@@ -284,8 +308,8 @@ namespace Bisaya__.src.Core
                     r = inp[0];
                 else if (t == typeof(float))
                     r = float.Parse(inp);
-                else if (t == typeof(bool) && (inp == "\"OO\"" || inp == "\"DILI\""))
-                    r = (inp == "\"OO\"");
+                else if (t == typeof(bool) && (inp == "OO" || inp == "DILI"))
+                    r = (inp == "OO");
                 else
                     throw new Exception($"Invalid Input, expected {t}");
                 Env.Set(varname, r);

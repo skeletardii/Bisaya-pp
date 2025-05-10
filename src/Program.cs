@@ -13,7 +13,7 @@ class Program
         string readme = "--READ ME !!!\r\n--ang gi assign sa parser kay wala naka tiwas\r\n--lexer -> parser -> interpreter mn unta\r\n--so lexer ra maka run for now :|\r\n--pero naa ray functions ang evaluator dili lang ma test kay walay parser :| ";
         //Console.WriteLine(readme);
         // Load source code from test file
-        string content = File.ReadAllText("..\\..\\..\\tests\\testcases\\9_ok.txt");
+        string content = File.ReadAllText("..\\..\\..\\tests\\sample.txt");
 
         // === LEXING ===
         Console.WriteLine("=== Lexing ===");
@@ -141,6 +141,10 @@ class Program
                 Console.WriteLine($"{indentStr}  Var: {varnode.VariableName}");
                 break;
 
+            case UnaryOpNode unary:
+                Console.WriteLine($"{indentStr}Operand: {unary.OperatorToken.Value}");
+                PrintAST(unary.Operand, indent + 2);
+                break;
             case LiteralNodeBase literal:
                 var valueProp = literal.GetType().GetProperty("Value");
                 var val = valueProp?.GetValue(literal)?.ToString() ?? "null";
