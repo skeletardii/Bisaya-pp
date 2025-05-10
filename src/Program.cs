@@ -160,10 +160,6 @@ class Program
                 Console.WriteLine($"{indentStr}- Body:");
                 PrintAST(forloop.Body, indent + 1);
                 break;
-            case UnaryOpNode unary:
-                Console.WriteLine($"{indentStr}Operand: {unary.OperatorToken.Value}");
-                PrintAST(unary.Operand, indent + 2);
-                break;
         }
     }
 
