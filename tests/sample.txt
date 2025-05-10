@@ -1,5 +1,8 @@
 SUGOD
-	MUGNA TINUOD ba = "OO"
-	DAWAT : ba
-	IPAKITA : DILI ba
+	MUGNA NUMERO a
+	DAWAT: a
+	SAMTANG (a < 10) PUNDOK {
+		a = a + 1
+		IPAKITA: a
+		}
 KATAPUSAN
