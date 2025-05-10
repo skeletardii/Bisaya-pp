@@ -1,7 +1,8 @@
 SUGOD
-	MUGNA NUMERO a = 0
-	BUHAT {
+	MUGNA NUMERO a
+	DAWAT: a
+	SAMTANG (a < 10) PUNDOK {
 		a = a + 1
 		IPAKITA: a
-	} SAMTANG ( a < 5)
+		}
 KATAPUSAN
