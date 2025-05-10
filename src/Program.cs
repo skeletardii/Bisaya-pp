@@ -160,6 +160,13 @@ class Program
                 Console.WriteLine($"{indentStr}- Body:");
                 PrintAST(forloop.Body, indent + 1);
                 break;
+            case DoWhileNode dowhile:
+                Console.WriteLine($"{indentStr}");
+                Console.WriteLine($"{indentStr}- Do:");
+                PrintAST(dowhile.Body, indent + 2);
+                Console.WriteLine($"{indentStr}- While:");
+                PrintAST(dowhile.Condition, indent + 2);
+                break;
         }
     }
 

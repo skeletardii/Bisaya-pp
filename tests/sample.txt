@@ -4,5 +4,5 @@ SUGOD
 	BUHAT {
 		a = a + 1
 		IPAKITA: a
-	}
+	} SAMTANG ( a < 5)
 KATAPUSAN

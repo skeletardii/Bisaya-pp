@@ -237,19 +237,15 @@ namespace Bisaya__.src.Core
             Body.Parent = this;
         }
     }
-
-    namespace Bisaya__.src.Core
+    internal class DoWhileNode : ASTNode
     {
-        internal class DoWhileNode : ASTNode
-        {
-            public BlockNode Body { get; }
-            public LiteralNodeBase Condition { get; }
+        public BlockNode Body { get; }
+        public LiteralNodeBase Condition { get; }
 
-            public DoWhileNode(BlockNode body, LiteralNodeBase condition)
-            {
-                Body = body;
-                Condition = condition;
-            }
+        public DoWhileNode(BlockNode body, LiteralNodeBase condition)
+        {
+            Body = body;
+            Condition = condition;
         }
     }
 
