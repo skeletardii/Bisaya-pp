@@ -58,7 +58,48 @@ namespace Bisaya__.src.Core
 
             return res;
         }
+        private static ASTNode handleForLoop(ForLoopNode node)
+        {
+            handleAssignment(node.declaration);
 
+            while (true)
+            {
+                bool conditionValue = getLiteralValue((LiteralNodeBase)handle(node.condition));
+
+                if (!conditionValue)
+                    break;
+                handle(node.Body);
+                handleAssignment((AssignmentNode)node.increment);
+            }
+
+            return null;
+        }
+        private static ASTNode handleDoWhile(DoWhileNode node)
+        {
+            do
+            {
+                handle(node.Body);
+            }
+            while ((bool)getLiteralValue((LiteralNodeBase)handle(node.Condition)));
+
+            return null;
+        }
+
+        private static dynamic ParseAutoNumber(string input)
+        {
+            if (input.Contains('.'))
+            {
+                if (float.TryParse(input, out float f))
+                    return f;
+            }
+            else
+            {
+                if (int.TryParse(input, out int i))
+                    return i;
+            }
+
+            return input;
+        }
         private static ASTNode handleBlock(BlockNode block)
         {
             if (block == null) return null;
@@ -203,8 +244,8 @@ namespace Bisaya__.src.Core
             dynamic value = Env.Get(node.VariableName);
             ASTNode res;
             Type type = value.GetType();
-
-            if (type == typeof(float))
+        
+            if (type == typeof(float) || type==typeof(double))
                 res = new FloatNode((float)value);
             else if (type == typeof(int))
                 res = new IntegerNode((int)value);
@@ -215,7 +256,7 @@ namespace Bisaya__.src.Core
             else if (type == typeof(string))
                 res = new CharNode((char)value[0]);
             else
-                throw new Exception("Unsupported type.");
+                throw new Exception($"Unsupported type. {type}");
 
             return res;
         }
@@ -291,91 +332,30 @@ namespace Bisaya__.src.Core
         //Handle Print statement
         private static ASTNode handlePrint(OutputNode node)
         {
-            LiteralNodeBase output = (LiteralNodeBase)(handle(node.Expression));
-            dynamic value = getLiteralValue(output);
-            if (value.GetType() == typeof(bool))
-                if ((bool)value)
-                    value = "OO";
-                else
-                    value = "DILI";
-            Console.Write(value);
+            dynamic val = getLiteralValue((LiteralNodeBase)handle(node.Expression));
+            Console.Write(val);
             return null;
         }
         // Commented out for debugging purposes, fix handleInput method to receive List<String> of variable names
         private static ASTNode handleInput(InputNode node)
         {
-            int i = 0;
-            string inputLine = Console.ReadLine();
-            string[] inputs = inputLine.Split(",");
-            List<string> varnames = node.VariableNames;
-            while (i < node.VariableNames.Count && varnames[i] != null && i < inputs.Length && inputs[i] != null) {
-                string inp = inputs[i].Trim();
-                string varname = node.VariableNames[i];
-                dynamic r = Env.Get(varname);
-                if (r == null)
-                    throw new Exception($"Variable {varname} does not exist in this scope.");
-                Type t = r.GetType();
-                if (t == typeof(string))
-                    t = typeof(char);
-                if (t == typeof(int))
-                    r = int.Parse(inp);
-                else if (t == typeof(char) || t == typeof(string))
-                    r = inp[0];
-                else if (t == typeof(float))
-                    r = float.Parse(inp);
-                else if (t == typeof(bool) && (inp == "OO" || inp == "DILI"))
-                    r = (inp == "OO");
-                else
-                    throw new Exception($"Invalid Input, expected {t}");
-                Env.Set(varname, r);
-                i++;
+            List<string> vars = node.VariableNames;
+            string[] inputs = Console.ReadLine().Split(",");
+            for (int i = 0; i < node.VariableNames.Count; i++)
+            {
+                dynamic cur = (string)(inputs[i].Trim());
+                Type t = (Env.Get(vars[i])).GetType();
+                if (t == typeof(bool))
+                    if (cur == "OO" || cur == "DILI")
+                        cur = cur == "OO";
+                    else
+                        throw new Exception($"Invalid input for {vars[i]}, must be of type TINUOD");
+                cur = Convert.ChangeType(cur, t);
+                Env.Set(vars[i], cur);
             }
             return null;
         }
-        private static ASTNode handleForLoop(ForLoopNode node)
-        {
-            // Step 1: Initialize the loop variable correctly
-            handleAssignment(node.declaration); // This sets initial value into Env
-
-            while (true)
-            {
-                // Step 2: Evaluate condition dynamically each iteration
-                bool conditionValue = getLiteralValue((LiteralNodeBase)handle(node.condition));
-
-                if (!conditionValue)
-                    break;
-                handle(node.Body);
-                handleAssignment((AssignmentNode)node.increment);
-            }
-
-            return null;
-        }
-        private static ASTNode handleDoWhile(DoWhileNode node)
-        {
-            do
-            {
-                handle(node.Body);
-            }
-            while ((bool)getLiteralValue((LiteralNodeBase)handle(node.Condition)));
-
-            return null;
-        }
-
-        private static dynamic ParseAutoNumber(string input)
-        {
-            if (input.Contains('.'))
-            {
-                if (float.TryParse(input, out float f))
-                    return f;
-            }
-            else
-            {
-                if (int.TryParse(input, out int i))
-                    return i;
-            }
-
-            return input;
-        }
+        
 
     }
 }

@@ -21,6 +21,14 @@ namespace Bisaya__.src.Core
     {
 
         public static Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
+        public static void printVars()
+        {
+            Console.WriteLine("VARIABLES IN ENVIRONMENT:");
+            foreach (var key in variables.Keys)
+            {
+                Console.WriteLine($"Var: {key}\tType: {variables[key].GetType()}\tValue: {variables[key]}");
+            }
+        }
         public static dynamic? Get(string varName)
         {
             if (Program.verbose) Console.WriteLine($"Get: {varName}");
