@@ -312,4 +312,22 @@ namespace Bisaya__.src.Core
             Expression.Parent = this;
         }
     }
+
+    internal class FunctionDefNode : ASTNode
+    {
+        public string FunctionName { get; }
+        public List<DeclarationNode> Parameters { get; }
+        public BlockNode Body { get; }
+
+        public FunctionDefNode(string functionName, List<DeclarationNode> parameters, BlockNode body)
+        {
+            FunctionName = functionName;
+            Parameters = parameters;
+            Body = body;
+            Body.Parent = this;
+
+            foreach (var param in parameters)
+                param.Parent = this;
+        }
+    }
 }

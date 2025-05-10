@@ -118,7 +118,7 @@ namespace Bisaya__.src.Core
             }
 
             Advance(); // consume 'KATAPUSAN'
-
+            Console.WriteLine("Terminating Start Block");
             return new BlockNode(statements);
         }
 
@@ -390,8 +390,9 @@ namespace Bisaya__.src.Core
         
         private ASTNode ParseBinaryOperation(int parentPrecedence, params TokenType[] stopAt)
         {
+            Console.WriteLine("Parsing left si " + Current.Value);
             var left = ParsePrimary(); // Start with the primary expression (could be literals, variables, etc.)
-            Console.WriteLine($"Left: {left.GetType().Name} with value {left}");
+            Console.WriteLine($"Starting new Binary Op where Left: {left.GetType().Name} with value {left}");
 
             while (true)
             {
@@ -409,13 +410,15 @@ namespace Bisaya__.src.Core
                 }
 
                 var opToken = Advance();
-                Console.WriteLine($"Operator: {opToken.Value} with precedence {precedence}");
-
+                if(opToken.Type == TokenType.Keyword || opToken.Type == TokenType.Identifier)
+                {
+                    return left;
+                }
                 // Handle concatenation operator & (with appropriate precedence)
-                if (opToken.Type == TokenType.Concatenator)
+                else if (opToken.Type == TokenType.Concatenator)
                 {
 
-                    var right = ParsePrimary(); // Parse the right-hand side of the concatenation operation
+                    var right = ParseExpression(); // Parse the right-hand side of the concatenation operation
                     left = new BinaryOpNode((LiteralNodeBase)left, opToken, (LiteralNodeBase)right);
                 }
                 else if(opToken.Type == TokenType.LeftParen)
@@ -521,8 +524,8 @@ namespace Bisaya__.src.Core
                 case TokenType.Concatenator:
                     var left = ParsePrimary();
                     var right = ParsePrimary();
+                    Console.WriteLine($"Concat {left} and {right}");
                     return new BinaryOpNode((LiteralNodeBase)left, token, (LiteralNodeBase)right);
-
                 default:
                     throw new Exception($"Unexpected token: {token.Value}");
             }
