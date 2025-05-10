@@ -168,10 +168,11 @@ namespace Bisaya__.src.Core
                 else if (currentChar == '[')
                 {
                     StringBuilder sb = new StringBuilder();
+                    int leftopen = i;
                     i++; // Skip the opening bracket
-                    while (i < line.Length && line[i] != ']')
+                    while (i < line.Length && !(line[i] == ']' && i != leftopen+1 ))
                     {
-                        sb.Append(line[i]);
+                            sb.Append(line[i]);
                         i++;
                     }
                     if (i < line.Length) // Skip the closing bracket
