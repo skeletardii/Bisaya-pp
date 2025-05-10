@@ -20,7 +20,7 @@ namespace Bisaya__.src.Core
     internal class Environment
     {
 
-        private static Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
+        public static Dictionary<string, dynamic> variables = new Dictionary<string, dynamic>();
         public static dynamic? Get(string varName)
         {
             if (Program.verbose) Console.WriteLine($"Get: {varName}");

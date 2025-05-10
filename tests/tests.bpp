@@ -12,7 +12,7 @@ SUGOD
 	MUGNA NUMERO 1x
 KATAPUSAN
 
-4:OK check
+4:Error (Must have NUMERO)
 SUGOD
 	MUGNA sum=0
 	sum = sum + 5
@@ -51,13 +51,13 @@ KATAPUSAN
 SUGOD
 	MUGNA LETRA l = 'a'
 	MUGNA LETRA m = 'b'
-	MUGNA LETRA n, o;
+	MUGNA LETRA n, o
 	DAWAT: n
-	o = n;
+	o = n
 	IPAKITA: l & m & n & o
 KATAPUSAN
 
-10:ERROR =======WRONG=======
+10:ERROR check sa eval ?
 SUGOD
 	MUGNA LETRA a = 'a', b = 'b'
 	MUGNA LETRA c = 'c'
@@ -72,14 +72,14 @@ SUGOD
 	IPAKITA: X + y
 KATAPUSAN
 
-12: wrong
+12: check
 SUGOD
 	MUGNA TINUOD a
 	DAWAT: a
 	IPAKITA: DILI a
 KATAPUSAN
 
-13: check
+13: check 
 SUGOD
 	MUGNA TINUOD a = "OO", b = "DILI", c = OO
 	DAWAT: a
@@ -109,7 +109,7 @@ SUGOD
 		IPAKITA: a + 10
 	}
 KATAPUSAN
-17: NEED PARENTHESIS 
+17: check
 SUGOD
 	MUGNA LETRA c, d = 'a'
 	DAWAT: c
@@ -123,7 +123,7 @@ SUGOD
 	}
 KATAPUSAN
 
-18: WRONG
+18: check
 SUGOD
 	MUGNA NUMERO age
 	MUGNA LETRA s = 's'
@@ -144,7 +144,7 @@ SUGOD
 	}
 KATAPUSAN
 
-19:
+19: check
 SUGOD
 	MUGNA NUMERO age
 	MUGNA LETRA s = 's'
@@ -177,7 +177,7 @@ SUGOD
 	}
 KATAPUSAN
 
-20:
+20: check
 SUGOD
 	MUGNA NUMERO a = 1, b, c
 	MUGNA LETRA as = 'x'
@@ -192,6 +192,7 @@ SUGOD
 	}
 KATAPUSAN
 
+21:  check
 SUGOD
 	MUGNA NUMERO a = 1
 	MUGNA NUMERO eNd
@@ -199,69 +200,19 @@ SUGOD
 	ALANG SA (a=1, a<=eNd, a++)
 	PUNDOK{
 		IPAKITA: a & $
-	}
-KATAPUSASUGOD
-	MUGNA NUMERO a = 1
-	MUGNA NUMERO eNd
-	DAWAT: eNd
-	ALANG SA (a=1, a<=eNd, a++)
-	PUNDOK{
-		IPAKITA: a & $
-	}
-KATAPUSA
-
-SUGOD
-	MUGNA NUMERO a
-	MUGNA NUMERO eNd
-	DAWAT: eNd
-	ALANG SA (a=1, a<=eNd, a++)
-	PUNDOK{
-		KUNG(a%2 <> 0)
-		PUNDOK{
-			IPAKITA: a & $
-		}
-	}
-KATAPUSANSUGOD
-	MUGNA NUMERO a
-	MUGNA NUMERO eNd
-	DAWAT: eNd
-	ALANG SA (a=1, a<=eNd, a++)
-	PUNDOK{
-		KUNG(a%2 <> 0)
-		PUNDOK{
-			IPAKITA: a & $
-		}
 	}
 KATAPUSAN
 
+22: check
 SUGOD
-	MUGNA NUMERO age
-	MUGNA LETRA s = 's'
-	MUGNA LETRA a = 'a'
-	MUGNA LETRA c = 'c'
-	MUGNA LETRA g
-	MUGNA LETRA b = 'b'
-	MUGNA LETRA l = 'l'
-	DAWAT: age
-	DAWAT: g
-	KUNG (age>=60)
+	MUGNA NUMERO a
+	MUGNA NUMERO eNd
+	DAWAT: eNd
+	ALANG SA (a=1, a<=eNd, a++)
 	PUNDOK{
-		IPAKITA: s
-		KUNG((g=='F') O (g=='f'))
+		KUNG(a%2 <> 0)
 		PUNDOK{
-			IPAKITA: b
+			IPAKITA: a & $
 		}
-		KUNG WALA
-		PUNDOK{
-			IPAKITA: l
-		}
-	}
-	KUNG DILI (age>=18)
-	PUNDOK{
-		IPAKITA: a
-	}
-	KUNG WALA
-	PUNDOK{
-		IPAKITA: c
 	}
 KATAPUSAN
